@@ -625,7 +625,9 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         private System.Windows.Forms.Label labelCompilationDate;
         private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage tabPageConfiguration;
+        private System.Windows.Forms.TabPage tabPageMotorConfig;
         private System.Windows.Forms.TabPage tabPageCalibration;
+        private System.Windows.Forms.TabPage tabPageManualControl;
         private System.Windows.Forms.TabPage tabPageLog;
         private System.Windows.Forms.TextBox textBoxLog;
         private System.Windows.Forms.GroupBox groupBoxCalibration;
