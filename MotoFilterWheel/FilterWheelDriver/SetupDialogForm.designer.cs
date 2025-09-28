@@ -86,6 +86,37 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.textBoxFilter7 = new System.Windows.Forms.TextBox();
             this.labelFilter8 = new System.Windows.Forms.Label();
             this.textBoxFilter8 = new System.Windows.Forms.TextBox();
+            this.groupBoxMotorSettings = new System.Windows.Forms.GroupBox();
+            this.btnSetStepsPerRev = new System.Windows.Forms.Button();
+            this.btnGetStepsPerRev = new System.Windows.Forms.Button();
+            this.btnResetMotorConfig = new System.Windows.Forms.Button();
+            this.btnSetMotorConfig = new System.Windows.Forms.Button();
+            this.btnGetMotorConfig = new System.Windows.Forms.Button();
+            this.numericDisableDelay = new System.Windows.Forms.NumericUpDown();
+            this.labelDisableDelay = new System.Windows.Forms.Label();
+            this.numericAcceleration = new System.Windows.Forms.NumericUpDown();
+            this.labelAcceleration = new System.Windows.Forms.Label();
+            this.numericMaxSpeed = new System.Windows.Forms.NumericUpDown();
+            this.labelMaxSpeed = new System.Windows.Forms.Label();
+            this.numericMotorSpeed = new System.Windows.Forms.NumericUpDown();
+            this.labelMotorSpeed = new System.Windows.Forms.Label();
+            this.numericStepsPerRev = new System.Windows.Forms.NumericUpDown();
+            this.labelStepsPerRev = new System.Windows.Forms.Label();
+            this.groupBoxDirection = new System.Windows.Forms.GroupBox();
+            this.radioUnidirectional = new System.Windows.Forms.RadioButton();
+            this.radioBidirectional = new System.Windows.Forms.RadioButton();
+            this.checkBoxReverse = new System.Windows.Forms.CheckBox();
+            this.btnGetDirectionConfig = new System.Windows.Forms.Button();
+            this.btnSetDirectionConfig = new System.Windows.Forms.Button();
+            this.groupBoxStepping = new System.Windows.Forms.GroupBox();
+            this.labelStepAmount = new System.Windows.Forms.Label();
+            this.numericStepAmount = new System.Windows.Forms.NumericUpDown();
+            this.btnStepForward = new System.Windows.Forms.Button();
+            this.btnStepBackward = new System.Windows.Forms.Button();
+            this.btnStepTo = new System.Windows.Forms.Button();
+            this.labelCurrentStep = new System.Windows.Forms.Label();
+            this.btnGetCurrentStep = new System.Windows.Forms.Button();
+            this.btnEmergencyStop = new System.Windows.Forms.Button();
             this.tabPageCalibration = new System.Windows.Forms.TabPage();
             this.groupBoxCalibration = new System.Windows.Forms.GroupBox();
             this.btnFinishCalibration = new System.Windows.Forms.Button();
@@ -100,6 +131,17 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             ((System.ComponentModel.ISupportInitialize)(this.picASCOM)).BeginInit();
             this.tabControl.SuspendLayout();
             this.tabPageConfiguration.SuspendLayout();
+            this.tabPageMotorConfig.SuspendLayout();
+            this.groupBoxMotorSettings.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericDisableDelay)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericAcceleration)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericMaxSpeed)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericMotorSpeed)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericStepsPerRev)).BeginInit();
+            this.groupBoxDirection.SuspendLayout();
+            this.tabPageManualControl.SuspendLayout();
+            this.groupBoxStepping.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericStepAmount)).BeginInit();
             this.tabPageCalibration.SuspendLayout();
             this.groupBoxCalibration.SuspendLayout();
             this.groupBoxBacklashCalibration.SuspendLayout();
@@ -424,8 +466,34 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.textBoxFilter8.Size = new System.Drawing.Size(120, 20);
             this.textBoxFilter8.TabIndex = 26;
             //
+            // groupBoxMotorSettings
+            //
+            this.groupBoxMotorSettings.Controls.Add(this.btnSetStepsPerRev);
+            this.groupBoxMotorSettings.Controls.Add(this.btnGetStepsPerRev);
+            this.groupBoxMotorSettings.Controls.Add(this.btnResetMotorConfig);
+            this.groupBoxMotorSettings.Controls.Add(this.btnSetMotorConfig);
+            this.groupBoxMotorSettings.Controls.Add(this.btnGetMotorConfig);
+            this.groupBoxMotorSettings.Controls.Add(this.numericDisableDelay);
+            this.groupBoxMotorSettings.Controls.Add(this.labelDisableDelay);
+            this.groupBoxMotorSettings.Controls.Add(this.numericAcceleration);
+            this.groupBoxMotorSettings.Controls.Add(this.labelAcceleration);
+            this.groupBoxMotorSettings.Controls.Add(this.numericMaxSpeed);
+            this.groupBoxMotorSettings.Controls.Add(this.labelMaxSpeed);
+            this.groupBoxMotorSettings.Controls.Add(this.numericMotorSpeed);
+            this.groupBoxMotorSettings.Controls.Add(this.labelMotorSpeed);
+            this.groupBoxMotorSettings.Controls.Add(this.numericStepsPerRev);
+            this.groupBoxMotorSettings.Controls.Add(this.labelStepsPerRev);
+            this.groupBoxMotorSettings.Location = new System.Drawing.Point(10, 10);
+            this.groupBoxMotorSettings.Name = "groupBoxMotorSettings";
+            this.groupBoxMotorSettings.Size = new System.Drawing.Size(495, 120);
+            this.groupBoxMotorSettings.TabIndex = 0;
+            this.groupBoxMotorSettings.TabStop = false;
+            this.groupBoxMotorSettings.Text = "Motor Settings";
+            //
             // tabPageMotorConfig
             //
+            this.tabPageMotorConfig.Controls.Add(this.groupBoxDirection);
+            this.tabPageMotorConfig.Controls.Add(this.groupBoxMotorSettings);
             this.tabPageMotorConfig.Location = new System.Drawing.Point(4, 22);
             this.tabPageMotorConfig.Name = "tabPageMotorConfig";
             this.tabPageMotorConfig.Padding = new System.Windows.Forms.Padding(3);
@@ -436,6 +504,8 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             //
             // tabPageManualControl
             //
+            this.tabPageManualControl.Controls.Add(this.groupBoxStepping);
+            this.tabPageManualControl.Controls.Add(this.btnEmergencyStop);
             this.tabPageManualControl.Location = new System.Drawing.Point(4, 22);
             this.tabPageManualControl.Name = "tabPageManualControl";
             this.tabPageManualControl.Padding = new System.Windows.Forms.Padding(3);
@@ -679,5 +749,36 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         private System.Windows.Forms.Label labelFilter6;
         private System.Windows.Forms.Label labelFilter7;
         private System.Windows.Forms.Label labelFilter8;
+        private System.Windows.Forms.GroupBox groupBoxMotorSettings;
+        private System.Windows.Forms.Button btnSetStepsPerRev;
+        private System.Windows.Forms.Button btnGetStepsPerRev;
+        private System.Windows.Forms.Button btnResetMotorConfig;
+        private System.Windows.Forms.Button btnSetMotorConfig;
+        private System.Windows.Forms.Button btnGetMotorConfig;
+        private System.Windows.Forms.NumericUpDown numericDisableDelay;
+        private System.Windows.Forms.Label labelDisableDelay;
+        private System.Windows.Forms.NumericUpDown numericAcceleration;
+        private System.Windows.Forms.Label labelAcceleration;
+        private System.Windows.Forms.NumericUpDown numericMaxSpeed;
+        private System.Windows.Forms.Label labelMaxSpeed;
+        private System.Windows.Forms.NumericUpDown numericMotorSpeed;
+        private System.Windows.Forms.Label labelMotorSpeed;
+        private System.Windows.Forms.NumericUpDown numericStepsPerRev;
+        private System.Windows.Forms.Label labelStepsPerRev;
+        private System.Windows.Forms.GroupBox groupBoxDirection;
+        private System.Windows.Forms.RadioButton radioUnidirectional;
+        private System.Windows.Forms.RadioButton radioBidirectional;
+        private System.Windows.Forms.CheckBox checkBoxReverse;
+        private System.Windows.Forms.Button btnGetDirectionConfig;
+        private System.Windows.Forms.Button btnSetDirectionConfig;
+        private System.Windows.Forms.GroupBox groupBoxStepping;
+        private System.Windows.Forms.Label labelStepAmount;
+        private System.Windows.Forms.NumericUpDown numericStepAmount;
+        private System.Windows.Forms.Button btnStepForward;
+        private System.Windows.Forms.Button btnStepBackward;
+        private System.Windows.Forms.Button btnStepTo;
+        private System.Windows.Forms.Label labelCurrentStep;
+        private System.Windows.Forms.Button btnGetCurrentStep;
+        private System.Windows.Forms.Button btnEmergencyStop;
     }
 }
