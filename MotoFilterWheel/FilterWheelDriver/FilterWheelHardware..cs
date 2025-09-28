@@ -610,10 +610,10 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                     LogMessage("Position Set", value.ToString());
 
                     // ASCOM uses 0-based indexing, Arduino uses 1-based
-                    if ((value < 0) | (value > SerialCommands.NUM_FILTERS - 1))
+                    if ((value < 0) | (value > SerialCommands.MAX_FILTERS - 1))
                     {
-                        LogMessage("", "Throwing InvalidValueException - Position: " + value.ToString() + ", Range: 0 to " + (SerialCommands.NUM_FILTERS - 1).ToString());
-                        throw new InvalidValueException("Position", value.ToString(), "0 to " + (SerialCommands.NUM_FILTERS - 1).ToString());
+                        LogMessage("", "Throwing InvalidValueException - Position: " + value.ToString() + ", Range: 0 to " + (SerialCommands.MAX_FILTERS - 1).ToString());
+                        throw new InvalidValueException("Position", value.ToString(), "0 to " + (SerialCommands.MAX_FILTERS - 1).ToString());
                     }
 
                     try

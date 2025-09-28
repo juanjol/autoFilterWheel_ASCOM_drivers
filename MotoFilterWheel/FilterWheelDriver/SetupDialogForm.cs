@@ -34,6 +34,10 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // Initialize serial communication for testing
             serialComm = new SerialCommunication(tl);
 
+            // Initialize steps comboboxes with default value
+            comboBoxSteps.SelectedIndex = 1; // Default to "3" steps
+            comboBoxBacklashSteps.SelectedIndex = 1; // Default to "3" steps
+
             // Initialise current values of user settings from the ASCOM Profile
             InitUI();
         }
@@ -217,7 +221,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         {
             btnConnect.Enabled = !connected && comboBoxComPort.SelectedItem != null && comboBoxComPort.SelectedItem.ToString() != NO_PORTS_MESSAGE;
             btnDisconnect.Enabled = connected;
-            btnSet.Enabled = connected;
+            btnSetFilterConfig.Enabled = connected;
             comboBoxComPort.Enabled = !connected;
 
             // Enable calibration buttons only when connected
@@ -231,6 +235,26 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             btnBacklashStep.Enabled = false; // Only enabled during backlash calibration
             btnBacklashMark.Enabled = false; // Only enabled during backlash calibration
             btnFinishBacklash.Enabled = false; // Only enabled during backlash calibration
+
+            // Enable motor configuration buttons only when connected
+            btnGetMotorConfig.Enabled = connected;
+            btnSetMotorConfig.Enabled = connected;
+            btnResetMotorConfig.Enabled = connected;
+            btnGetDirectionConfig.Enabled = connected;
+            btnSetDirectionConfig.Enabled = connected;
+            btnGetStepsPerRev.Enabled = connected;
+            btnSetStepsPerRev.Enabled = connected;
+
+            // Enable manual control buttons only when connected
+            btnStepForward.Enabled = connected;
+            btnStepBackward.Enabled = connected;
+            btnStepTo.Enabled = connected;
+            btnGetStepPosition.Enabled = connected;
+            btnEnableMotor.Enabled = connected;
+            btnDisableMotor.Enabled = connected;
+            btnGetStatus.Enabled = connected;
+            btnGetVersion.Enabled = connected;
+            btnGetDeviceId.Enabled = connected;
         }
 
         private void BtnConnect_Click(object sender, EventArgs e)
@@ -444,7 +468,9 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 btnCalibrationForward.Enabled = true;
                 btnCalibrationBackward.Enabled = true;
                 btnFinishCalibration.Enabled = true;
-                btnSet.Enabled = false;
+
+                // Update status
+                labelRevCalStatus.Text = "Status: Calibrating - Use Forward/Back buttons to adjust";
 
                 tl.LogMessage("BtnStartCalibration_Click", "Revolution calibration started successfully");
                 AddToLog("INFO", "Revolution calibration started!");
@@ -465,9 +491,10 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
             try
             {
-                string response = SendCommandWithLog("RCP3"); // Add 3 steps for finer control
-                tl.LogMessage("BtnCalibrationForward_Click", "Added 3 steps to calibration");
-                AddToLog("INFO", "Added 3 steps forward");
+                string steps = comboBoxSteps.SelectedItem?.ToString() ?? "3";
+                string response = SendCommandWithLog($"RCP{steps}");
+                tl.LogMessage("BtnCalibrationForward_Click", $"Added {steps} steps to calibration");
+                AddToLog("INFO", $"Added {steps} steps forward");
             }
             catch (Exception ex)
             {
@@ -484,9 +511,10 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
             try
             {
-                string response = SendCommandWithLog("RCM3"); // Subtract 3 steps for finer control
-                tl.LogMessage("BtnCalibrationBackward_Click", "Subtracted 3 steps from calibration");
-                AddToLog("INFO", "Subtracted 3 steps backward");
+                string steps = comboBoxSteps.SelectedItem?.ToString() ?? "3";
+                string response = SendCommandWithLog($"RCM{steps}");
+                tl.LogMessage("BtnCalibrationBackward_Click", $"Subtracted {steps} steps from calibration");
+                AddToLog("INFO", $"Subtracted {steps} steps backward");
             }
             catch (Exception ex)
             {
@@ -517,7 +545,9 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                     btnCalibrationForward.Enabled = false;
                     btnCalibrationBackward.Enabled = false;
                     btnFinishCalibration.Enabled = false;
-                    btnSet.Enabled = true;
+
+                    // Update status
+                    labelRevCalStatus.Text = "Status: Complete - Revolution calibration saved";
 
                     tl.LogMessage("BtnFinishCalibration_Click", "Revolution calibration finished successfully");
                     AddToLog("INFO", "Revolution calibration completed!");
@@ -534,7 +564,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 btnCalibrationForward.Enabled = false;
                 btnCalibrationBackward.Enabled = false;
                 btnFinishCalibration.Enabled = false;
-                btnSet.Enabled = true;
+                labelRevCalStatus.Text = "Status: Error - Calibration failed";
             }
         }
 
@@ -556,6 +586,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 if (response.Contains("ERROR:ENCODER_REQUIRED"))
                 {
                     AddToLog("ERR", "Encoder required for backlash calibration");
+                    labelBacklashStatus.Text = "Status: Error - AS5600 encoder required";
                     MessageBox.Show("Backlash calibration requires an encoder (AS5600). Please ensure it's connected and detected.", "Encoder Required", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
@@ -570,7 +601,9 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
                 // Disable revolution calibration during backlash calibration
                 btnStartCalibration.Enabled = false;
-                btnSet.Enabled = false;
+
+                // Update status
+                labelBacklashStatus.Text = "Status: Calibrating forward direction - Use Step and Mark";
 
                 tl.LogMessage("BtnStartBacklash_Click", "Backlash calibration started successfully");
                 AddToLog("INFO", "Backlash calibration started - testing forward direction");
@@ -591,11 +624,11 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
             try
             {
-                // Use 2 steps for very fine control
-                string response = SendCommandWithLog("BLS2");
+                string steps = comboBoxBacklashSteps.SelectedItem?.ToString() ?? "3";
+                string response = SendCommandWithLog($"BLS{steps}");
                 string direction = backlashForwardDirection ? "forward" : "backward";
-                tl.LogMessage("BtnBacklashStep_Click", $"Backlash test step in {direction} direction");
-                AddToLog("INFO", $"Test step ({direction} direction)");
+                tl.LogMessage("BtnBacklashStep_Click", $"Backlash test step ({steps} steps) in {direction} direction");
+                AddToLog("INFO", $"Test step ({steps} steps, {direction} direction)");
             }
             catch (Exception ex)
             {
@@ -618,6 +651,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 if (response.StartsWith("BLM_FORWARD:"))
                 {
                     backlashForwardDirection = false;
+                    labelBacklashStatus.Text = "Status: Calibrating backward direction - Use Step and Mark";
                     AddToLog("INFO", "Forward backlash measured - now testing backward direction");
                     MessageBox.Show("Forward direction complete!\n\nNow testing backward direction:\n1. Use 'Step' to move in reverse\n2. Click 'Mark' when you detect movement", "Testing Backward Direction", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
@@ -627,6 +661,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                     btnFinishBacklash.Enabled = true;
                     btnBacklashStep.Enabled = false;
                     btnBacklashMark.Enabled = false;
+                    labelBacklashStatus.Text = "Status: Ready to finish - Both directions calibrated";
                     MessageBox.Show("Both directions measured!\n\nClick 'Finish' to save the backlash calibration.", "Ready to Finish", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
@@ -663,7 +698,9 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
                     // Re-enable other functions
                     btnStartCalibration.Enabled = true;
-                    btnSet.Enabled = true;
+
+                    // Update status
+                    labelBacklashStatus.Text = "Status: Complete - Backlash calibration saved";
 
                     tl.LogMessage("BtnFinishBacklash_Click", "Backlash calibration finished successfully");
                     AddToLog("INFO", "Backlash calibration completed and saved!");
@@ -683,7 +720,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 btnBacklashMark.Enabled = false;
                 btnFinishBacklash.Enabled = false;
                 btnStartCalibration.Enabled = true;
-                btnSet.Enabled = true;
+                labelBacklashStatus.Text = "Status: Error - Backlash calibration failed";
             }
         }
 
@@ -775,6 +812,564 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             {
                 AddToLog("ERR", ex.Message);
                 throw;
+            }
+        }
+
+        // Motor Configuration Event Handlers
+        private void BtnGetMotorConfig_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnGetMotorConfig_Click", "Getting motor configuration");
+                AddToLog("INFO", "Getting motor configuration...");
+
+                string response = SendCommandWithLog("GMC");
+
+                // Parse motor configuration response
+                // Expected format: MOTOR_CONFIG:SPEED=1000,MAX_SPEED=2000,ACCELERATION=800,DISABLE_DELAY=1000
+                if (response.StartsWith("MOTOR_CONFIG:"))
+                {
+                    string configStr = response.Substring("MOTOR_CONFIG:".Length);
+                    string[] configParams = configStr.Split(',');
+
+                    foreach (string param in configParams)
+                    {
+                        string[] keyValue = param.Split('=');
+                        if (keyValue.Length == 2)
+                        {
+                            string key = keyValue[0].Trim();
+                            if (int.TryParse(keyValue[1].Trim(), out int value))
+                            {
+                                switch (key)
+                                {
+                                    case "SPEED":
+                                        numericMotorSpeed.Value = Math.Max(numericMotorSpeed.Minimum, Math.Min(numericMotorSpeed.Maximum, value));
+                                        break;
+                                    case "MAX_SPEED":
+                                        numericMaxSpeed.Value = Math.Max(numericMaxSpeed.Minimum, Math.Min(numericMaxSpeed.Maximum, value));
+                                        break;
+                                    case "ACCELERATION":
+                                        numericAcceleration.Value = Math.Max(numericAcceleration.Minimum, Math.Min(numericAcceleration.Maximum, value));
+                                        break;
+                                    case "DISABLE_DELAY":
+                                        numericDisableDelay.Value = Math.Max(numericDisableDelay.Minimum, Math.Min(numericDisableDelay.Maximum, value));
+                                        break;
+                                    case "STEPS_PER_REV":
+                                        numericStepsPerRev.Value = Math.Max(numericStepsPerRev.Minimum, Math.Min(numericStepsPerRev.Maximum, value));
+                                        break;
+                                }
+                            }
+                        }
+                    }
+
+                    AddToLog("INFO", "Motor configuration retrieved successfully");
+                    MessageBox.Show("Motor configuration retrieved successfully!", "Configuration Retrieved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    AddToLog("WARN", $"Unexpected motor config response: {response}");
+                }
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnGetMotorConfig_Click", $"Error getting motor configuration: {ex.Message}");
+                AddToLog("ERR", $"Get motor config failed: {ex.Message}");
+                MessageBox.Show($"Error getting motor configuration: {ex.Message}", "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnSetMotorConfig_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnSetMotorConfig_Click", "Setting motor configuration");
+                AddToLog("INFO", "Setting motor configuration...");
+
+                // Send motor speed
+                SendCommandWithLog($"MS{numericMotorSpeed.Value}");
+
+                // Send maximum speed
+                SendCommandWithLog($"MXS{numericMaxSpeed.Value}");
+
+                // Send acceleration
+                SendCommandWithLog($"MA{numericAcceleration.Value}");
+
+                // Send disable delay
+                SendCommandWithLog($"MDD{numericDisableDelay.Value}");
+
+                // Send steps per revolution
+                SendCommandWithLog($"SPR{numericStepsPerRev.Value}");
+
+                AddToLog("INFO", "Motor configuration sent successfully");
+                MessageBox.Show("Motor configuration sent successfully!\nAll settings have been saved to the device.", "Configuration Set", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnSetMotorConfig_Click", $"Error setting motor configuration: {ex.Message}");
+                AddToLog("ERR", $"Set motor config failed: {ex.Message}");
+                MessageBox.Show($"Error setting motor configuration: {ex.Message}", "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnResetMotorConfig_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                DialogResult result = MessageBox.Show("Reset motor configuration to default values?\n\nThis will restore factory settings for speed, acceleration, and timing parameters.",
+                                                    "Confirm Reset", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                if (result == DialogResult.Yes)
+                {
+                    tl.LogMessage("BtnResetMotorConfig_Click", "Resetting motor configuration");
+                    AddToLog("INFO", "Resetting motor configuration to defaults...");
+
+                    string response = SendCommandWithLog("RMC");
+
+                    // Reset UI controls to defaults
+                    numericMotorSpeed.Value = 1000;
+                    numericMaxSpeed.Value = 2000;
+                    numericAcceleration.Value = 500;
+                    numericDisableDelay.Value = 1000;
+                    numericStepsPerRev.Value = 2048;
+
+                    AddToLog("INFO", "Motor configuration reset to defaults");
+                    MessageBox.Show("Motor configuration reset to default values!", "Configuration Reset", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnResetMotorConfig_Click", $"Error resetting motor configuration: {ex.Message}");
+                AddToLog("ERR", $"Reset motor config failed: {ex.Message}");
+                MessageBox.Show($"Error resetting motor configuration: {ex.Message}", "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnGetDirectionConfig_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnGetDirectionConfig_Click", "Getting direction configuration");
+                AddToLog("INFO", "Getting direction configuration...");
+
+                string response = SendCommandWithLog("GDC");
+
+                // Parse direction configuration response
+                // Expected format: DIRECTION_CONFIG:MODE=0,REVERSE=1
+                if (response.StartsWith("DIRECTION_CONFIG:"))
+                {
+                    string configStr = response.Substring("DIRECTION_CONFIG:".Length);
+                    string[] configParams = configStr.Split(',');
+
+                    foreach (string param in configParams)
+                    {
+                        string[] keyValue = param.Split('=');
+                        if (keyValue.Length == 2)
+                        {
+                            string key = keyValue[0].Trim();
+                            if (int.TryParse(keyValue[1].Trim(), out int value))
+                            {
+                                switch (key)
+                                {
+                                    case "MODE":
+                                        radioUnidirectional.Checked = (value == 0);
+                                        radioBidirectional.Checked = (value == 1);
+                                        break;
+                                    case "REVERSE":
+                                        checkBoxReverse.Checked = (value == 1);
+                                        break;
+                                }
+                            }
+                        }
+                    }
+
+                    AddToLog("INFO", "Direction configuration retrieved successfully");
+                    MessageBox.Show("Direction configuration retrieved successfully!", "Configuration Retrieved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    AddToLog("WARN", $"Unexpected direction config response: {response}");
+                }
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnGetDirectionConfig_Click", $"Error getting direction configuration: {ex.Message}");
+                AddToLog("ERR", $"Get direction config failed: {ex.Message}");
+                MessageBox.Show($"Error getting direction configuration: {ex.Message}", "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnSetDirectionConfig_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnSetDirectionConfig_Click", "Setting direction configuration");
+                AddToLog("INFO", "Setting direction configuration...");
+
+                // Send direction mode
+                int directionMode = radioBidirectional.Checked ? 1 : 0;
+                SendCommandWithLog($"MDM{directionMode}");
+
+                // Send reverse setting
+                int reverse = checkBoxReverse.Checked ? 1 : 0;
+                SendCommandWithLog($"MRV{reverse}");
+
+                AddToLog("INFO", "Direction configuration sent successfully");
+                MessageBox.Show("Direction configuration sent successfully!\nDirection settings have been saved to the device.", "Configuration Set", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnSetDirectionConfig_Click", $"Error setting direction configuration: {ex.Message}");
+                AddToLog("ERR", $"Set direction config failed: {ex.Message}");
+                MessageBox.Show($"Error setting direction configuration: {ex.Message}", "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // Manual Control Event Handlers
+        private void BtnStepForward_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                int steps = (int)numericStepAmount.Value;
+                tl.LogMessage("BtnStepForward_Click", $"Stepping forward {steps} steps");
+                string response = SendCommandWithLog($"SF{steps}");
+                AddToLog("INFO", $"Stepped forward {steps} steps");
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnStepForward_Click", $"Error stepping forward: {ex.Message}");
+                AddToLog("ERR", $"Step forward failed: {ex.Message}");
+                MessageBox.Show($"Error stepping forward: {ex.Message}", "Step Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnStepBackward_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                int steps = (int)numericStepAmount.Value;
+                tl.LogMessage("BtnStepBackward_Click", $"Stepping backward {steps} steps");
+                string response = SendCommandWithLog($"SB{steps}");
+                AddToLog("INFO", $"Stepped backward {steps} steps");
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnStepBackward_Click", $"Error stepping backward: {ex.Message}");
+                AddToLog("ERR", $"Step backward failed: {ex.Message}");
+                MessageBox.Show($"Error stepping backward: {ex.Message}", "Step Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnStepTo_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                int position = (int)numericAbsoluteStep.Value;
+                tl.LogMessage("BtnStepToPosition_Click", $"Moving to absolute step position {position}");
+                string response = SendCommandWithLog($"ST{position}");
+                AddToLog("INFO", $"Moved to absolute step position {position}");
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnStepToPosition_Click", $"Error moving to position: {ex.Message}");
+                AddToLog("ERR", $"Move to position failed: {ex.Message}");
+                MessageBox.Show($"Error moving to position: {ex.Message}", "Position Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnGetStepPosition_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnGetStepPosition_Click", "Getting current step position");
+                string response = SendCommandWithLog("GST");
+
+                // Parse step position response
+                // Expected format: STEP:1024
+                if (response.StartsWith("STEP:"))
+                {
+                    string stepStr = response.Substring("STEP:".Length);
+                    if (int.TryParse(stepStr, out int stepPosition))
+                    {
+                        labelCurrentStep.Text = $"Current: {stepPosition}";
+                        AddToLog("INFO", $"Current step position: {stepPosition}");
+                    }
+                }
+                else
+                {
+                    AddToLog("WARN", $"Unexpected step position response: {response}");
+                }
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnGetStepPosition_Click", $"Error getting step position: {ex.Message}");
+                AddToLog("ERR", $"Get step position failed: {ex.Message}");
+                MessageBox.Show($"Error getting step position: {ex.Message}", "Position Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnEnableMotor_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnEnableMotor_Click", "Enabling motor power");
+                string response = SendCommandWithLog("ME");
+                AddToLog("INFO", "Motor power enabled");
+                MessageBox.Show("Motor power enabled!", "Motor Enabled", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnEnableMotor_Click", $"Error enabling motor: {ex.Message}");
+                AddToLog("ERR", $"Enable motor failed: {ex.Message}");
+                MessageBox.Show($"Error enabling motor: {ex.Message}", "Motor Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnDisableMotor_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnDisableMotor_Click", "Disabling motor power");
+                string response = SendCommandWithLog("MD");
+                AddToLog("INFO", "Motor power disabled");
+                MessageBox.Show("Motor power disabled!", "Motor Disabled", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnDisableMotor_Click", $"Error disabling motor: {ex.Message}");
+                AddToLog("ERR", $"Disable motor failed: {ex.Message}");
+                MessageBox.Show($"Error disabling motor: {ex.Message}", "Motor Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnGetStatus_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnGetStatus_Click", "Getting system status");
+                string response = SendCommandWithLog("STATUS");
+                AddToLog("INFO", "System status retrieved");
+                MessageBox.Show($"System Status:\n\n{response}", "System Status", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnGetStatus_Click", $"Error getting status: {ex.Message}");
+                AddToLog("ERR", $"Get status failed: {ex.Message}");
+                MessageBox.Show($"Error getting system status: {ex.Message}", "Status Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnGetVersion_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnGetVersion_Click", "Getting firmware version");
+                string response = SendCommandWithLog("VER");
+                AddToLog("INFO", "Firmware version retrieved");
+
+                string version = response;
+                if (response.StartsWith("VERSION:"))
+                {
+                    version = response.Substring("VERSION:".Length);
+                }
+
+                MessageBox.Show($"Firmware Version: {version}", "Firmware Version", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnGetVersion_Click", $"Error getting version: {ex.Message}");
+                AddToLog("ERR", $"Get version failed: {ex.Message}");
+                MessageBox.Show($"Error getting firmware version: {ex.Message}", "Version Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnGetDeviceId_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnGetDeviceId_Click", "Getting device ID");
+                string response = SendCommandWithLog("ID");
+                AddToLog("INFO", "Device ID retrieved");
+
+                string deviceId = response;
+                if (response.StartsWith("DEVICE_ID:"))
+                {
+                    deviceId = response.Substring("DEVICE_ID:".Length);
+                }
+
+                MessageBox.Show($"Device ID: {deviceId}", "Device ID", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnGetDeviceId_Click", $"Error getting device ID: {ex.Message}");
+                AddToLog("ERR", $"Get device ID failed: {ex.Message}");
+                MessageBox.Show($"Error getting device ID: {ex.Message}", "Device ID Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnEmergencyStop_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnEmergencyStop_Click", "Emergency stop triggered");
+                string response = SendCommandWithLog("STOP");
+                AddToLog("WARN", "EMERGENCY STOP - All movement halted");
+                MessageBox.Show("Emergency stop activated!\nAll motor movement has been halted.", "Emergency Stop", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnEmergencyStop_Click", $"Error during emergency stop: {ex.Message}");
+                AddToLog("ERR", $"Emergency stop failed: {ex.Message}");
+                MessageBox.Show($"Error during emergency stop: {ex.Message}", "Stop Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Get steps per revolution from device
+        /// </summary>
+        private void BtnGetStepsPerRev_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnGetStepsPerRev_Click", "Getting steps per revolution");
+                AddToLog("INFO", "Getting steps per revolution...");
+
+                int stepsPerRev = serialComm.GetStepsPerRevolution();
+                numericStepsPerRev.Value = Math.Max(numericStepsPerRev.Minimum, Math.Min(numericStepsPerRev.Maximum, stepsPerRev));
+
+                AddToLog("INFO", $"Steps per revolution: {stepsPerRev}");
+                MessageBox.Show($"Steps per revolution: {stepsPerRev}", "Steps Per Revolution", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnGetStepsPerRev_Click", $"Error getting steps per revolution: {ex.Message}");
+                AddToLog("ERR", $"Get steps per revolution failed: {ex.Message}");
+                MessageBox.Show($"Error getting steps per revolution: {ex.Message}", "Steps Per Revolution Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Set steps per revolution to device
+        /// </summary>
+        private void BtnSetStepsPerRev_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnSetStepsPerRev_Click", "Setting steps per revolution");
+                AddToLog("INFO", "Setting steps per revolution...");
+
+                int stepsPerRev = (int)numericStepsPerRev.Value;
+                serialComm.SetStepsPerRevolution(stepsPerRev);
+
+                AddToLog("INFO", $"Steps per revolution set to: {stepsPerRev}");
+                MessageBox.Show($"Steps per revolution set to: {stepsPerRev}", "Steps Per Revolution Set", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnSetStepsPerRev_Click", $"Error setting steps per revolution: {ex.Message}");
+                AddToLog("ERR", $"Set steps per revolution failed: {ex.Message}");
+                MessageBox.Show($"Error setting steps per revolution: {ex.Message}", "Steps Per Revolution Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

@@ -1,0 +1,102 @@
+name: Build ASCOM Driver Installer
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '6.0.x'
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1
+
+    - name: Restore NuGet packages
+      run: nuget restore MotoFilterWheel.sln
+
+    - name: Build Solution in Release mode
+      run: msbuild MotoFilterWheel.sln /p:Configuration=Release /p:Platform="Any CPU"
+
+    - name: Download and Install Inno Setup
+      shell: pwsh
+      run: |
+        Write-Host "Downloading Inno Setup..."
+        $url = "https://files.jrsoftware.org/is/6/innosetup-6.2.2.exe"
+        $output = "$env:TEMP\innosetup-installer.exe"
+        Invoke-WebRequest -Uri $url -OutFile $output
+
+        Write-Host "Installing Inno Setup silently..."
+        Start-Process -FilePath $output -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-" -Wait
+
+        Write-Host "Inno Setup installed successfully"
+
+    - name: Compile Installer
+      shell: cmd
+      run: |
+        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" AutoFilterWheel_Setup.iss
+
+    - name: Get version from tag or branch
+      id: version
+      shell: pwsh
+      run: |
+        if ($env:GITHUB_REF -match 'refs/tags/v(.+)') {
+          $version = $matches[1]
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          echo "RELEASE_NAME=Release v$version" >> $env:GITHUB_OUTPUT
+        } else {
+          $branch = $env:GITHUB_REF -replace 'refs/heads/', ''
+          $shortSha = $env:GITHUB_SHA.Substring(0, 7)
+          echo "VERSION=$branch-$shortSha" >> $env:GITHUB_OUTPUT
+          echo "RELEASE_NAME=Development Build ($branch-$shortSha)" >> $env:GITHUB_OUTPUT
+        }
+
+    - name: Upload Installer as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: autoFilterWheel-installer-${{ steps.version.outputs.VERSION }}
+        path: Output/autoFilterWheel_Setup*.exe
+
+    - name: Create Release (only for tags)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        name: ${{ steps.version.outputs.RELEASE_NAME }}
+        draft: false
+        prerelease: ${{ contains(github.ref, 'beta') || contains(github.ref, 'alpha') }}
+        files: Output/autoFilterWheel_Setup*.exe
+        body: |
+          ## autoFilterWheel ASCOM Driver ${{ steps.version.outputs.VERSION }}
+
+          ### Installation Instructions
+          1. Download the installer below
+          2. Ensure ASCOM Platform 6.0+ is installed
+          3. Right-click the installer and select "Run as Administrator"
+          4. Follow the installation wizard
+
+          ### Requirements
+          - Windows 7/8/10/11
+          - .NET Framework 4.7.2+
+          - ASCOM Platform 6.0+
+
+          ### What's New
+          - See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details
+
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

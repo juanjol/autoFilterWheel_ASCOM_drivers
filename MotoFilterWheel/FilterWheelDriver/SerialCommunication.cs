@@ -263,8 +263,8 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         /// </summary>
         public void MoveToPosition(int position)
         {
-            if (position < 1 || position > SerialCommands.NUM_FILTERS)
-                throw new InvalidValueException($"Position must be between 1 and {SerialCommands.NUM_FILTERS}");
+            if (position < 1 || position > SerialCommands.MAX_FILTERS)
+                throw new InvalidValueException($"Position must be between 1 and {SerialCommands.MAX_FILTERS}");
 
             string command = SerialCommands.CMD_MOVE_POSITION + position;
             string response = SendCommand(command);
@@ -311,8 +311,8 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         /// </summary>
         public string GetFilterName(int position)
         {
-            if (position < 1 || position > SerialCommands.NUM_FILTERS)
-                throw new InvalidValueException($"Position must be between 1 and {SerialCommands.NUM_FILTERS}");
+            if (position < 1 || position > SerialCommands.MAX_FILTERS)
+                throw new InvalidValueException($"Position must be between 1 and {SerialCommands.MAX_FILTERS}");
 
             string command = SerialCommands.CMD_GET_FILTER_NAME + position;
             string response = SendCommand(command);
@@ -332,9 +332,11 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         /// </summary>
         public string[] GetAllFilterNames()
         {
-            string[] names = new string[SerialCommands.NUM_FILTERS];
+            // First get the actual filter count from device
+            int filterCount = GetFilterCountFromDevice();
+            string[] names = new string[filterCount];
 
-            for (int i = 1; i <= SerialCommands.NUM_FILTERS; i++)
+            for (int i = 1; i <= filterCount; i++)
             {
                 try
                 {
@@ -458,6 +460,124 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 return response.Substring(SerialCommands.RESP_VERSION.Length);
             }
             throw new FormatException($"Invalid version response: {response}");
+        }
+
+        /// <summary>
+        /// Get filter count from device
+        /// </summary>
+        public int GetFilterCountFromDevice()
+        {
+            string response = SendCommand(SerialCommands.CMD_GET_FILTERS);
+
+            // Parse response format: F[n]
+            if (response.StartsWith("F") && response.Length >= 2)
+            {
+                if (int.TryParse(response.Substring(1), out int count))
+                {
+                    return count;
+                }
+            }
+
+            throw new InvalidOperationException($"Invalid filter count response: {response}");
+        }
+
+        /// <summary>
+        /// Set steps per revolution
+        /// </summary>
+        public void SetStepsPerRevolution(int steps)
+        {
+            if (steps < SerialCommands.MIN_STEPS_PER_REV || steps > SerialCommands.MAX_STEPS_PER_REV)
+                throw new InvalidValueException($"Steps per revolution must be between {SerialCommands.MIN_STEPS_PER_REV} and {SerialCommands.MAX_STEPS_PER_REV}");
+
+            string command = SerialCommands.CMD_SET_STEPS_PER_REV + steps;
+            string response = SendCommand(command);
+
+            // Verify the response
+            if (!response.StartsWith("SPR" + steps))
+            {
+                throw new InvalidOperationException($"Unexpected response to set steps per revolution command: {response}");
+            }
+        }
+
+        /// <summary>
+        /// Get steps per revolution
+        /// </summary>
+        public int GetStepsPerRevolution()
+        {
+            string response = SendCommand(SerialCommands.CMD_GET_STEPS_PER_REV);
+
+            // Parse response format: SPR:xxxx
+            if (response.StartsWith("SPR:"))
+            {
+                string stepsStr = response.Substring(4);
+                if (int.TryParse(stepsStr, out int steps))
+                {
+                    return steps;
+                }
+            }
+
+            throw new FormatException($"Invalid steps per revolution response: {response}");
+        }
+
+        /// <summary>
+        /// Get complete motor configuration
+        /// </summary>
+        public MotorConfiguration GetMotorConfiguration()
+        {
+            string response = SendCommand(SerialCommands.CMD_GET_MOTOR_CONFIG);
+            return ParseMotorConfigResponse(response);
+        }
+
+        /// <summary>
+        /// Parse motor configuration response
+        /// </summary>
+        private MotorConfiguration ParseMotorConfigResponse(string response)
+        {
+            var config = new MotorConfiguration();
+
+            if (!response.StartsWith("MOTOR_CONFIG:"))
+            {
+                throw new FormatException($"Invalid motor config response: {response}");
+            }
+
+            string configData = response.Substring(13); // Remove "MOTOR_CONFIG:"
+            string[] parts = configData.Split(',');
+
+            foreach (string part in parts)
+            {
+                string[] keyValue = part.Split('=');
+                if (keyValue.Length == 2)
+                {
+                    string key = keyValue[0].Trim();
+                    string value = keyValue[1].Trim();
+
+                    switch (key)
+                    {
+                        case "SPEED":
+                            if (int.TryParse(value, out int speed))
+                                config.Speed = speed;
+                            break;
+                        case "MAX_SPEED":
+                            if (int.TryParse(value, out int maxSpeed))
+                                config.MaxSpeed = maxSpeed;
+                            break;
+                        case "ACCEL":
+                            if (int.TryParse(value, out int accel))
+                                config.Acceleration = accel;
+                            break;
+                        case "DISABLE_DELAY":
+                            if (int.TryParse(value, out int delay))
+                                config.DisableDelay = delay;
+                            break;
+                        case "STEPS_PER_REV":
+                            if (int.TryParse(value, out int stepsPerRev))
+                                config.StepsPerRevolution = stepsPerRev;
+                            break;
+                    }
+                }
+            }
+
+            return config;
         }
 
         /// <summary>

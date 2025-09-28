@@ -53,6 +53,7 @@
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
+    <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -77,6 +78,7 @@
     <Compile Include="ClassFactory.cs" />
     <Compile Include="FilterWheelDriver\FilterWheelDriver.cs" />
     <Compile Include="FilterWheelDriver\FilterWheelHardware..cs" />
+    <Compile Include="FilterWheelDriver\MotorConfiguration.cs" />
     <Compile Include="FilterWheelDriver\SerialCommands.cs" />
     <Compile Include="FilterWheelDriver\SerialCommunication.cs" />
     <Compile Include="frmMain.cs">

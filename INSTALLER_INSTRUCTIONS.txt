@@ -1,0 +1,134 @@
+========================================================================
+          INSTRUCTIONS FOR CREATING THE DRIVER INSTALLER
+                    autoFilterWheel ASCOM Driver v6.6.0
+========================================================================
+
+PREPARATION COMPLETED:
+✓ Project compiled in Release mode
+✓ Inno Setup script prepared (AutoFilterWheel_Setup.iss)
+✓ Inno Setup installed on the system
+✓ Configuration ready to generate installer on desktop
+
+========================================================================
+                        COMPILATION STEPS
+========================================================================
+
+STEP 1: Open Inno Setup Compiler
+---------------------------------
+1. Open "Inno Setup Compiler" from Windows Start menu
+2. In main menu: File → Open
+3. Navigate to: C:\Users\juanjo\source\repos\MotoFilterWheel\
+4. Select file: AutoFilterWheel_Setup.iss
+5. Click "Open"
+
+STEP 2: Compile the installer
+------------------------------
+1. In Inno Setup: Build → Compile (or press F9 key)
+2. Wait for process to complete (a few seconds)
+3. Verify no errors in compilation window
+4. Upon successful completion will show: "Compiled successfully"
+
+STEP 3: Locate the installer
+-------------------------------
+The installer will be created on DESKTOP with the name:
+    autoFilterWheel_Setup_v6.6.0.exe
+
+========================================================================
+                    INSTALLER CONTENTS
+========================================================================
+
+The installer automatically includes:
+✓ ASCOM Platform 6 verification (warning if not installed)
+✓ Installation to: C:\Program Files\ASCOM\FilterWheel\
+✓ Automatic COM driver registration
+✓ ASCOM Chooser registration to appear in the list
+✓ All necessary files:
+  - ASCOM.autoFilterWheel.exe (main executable)
+  - ASCOM.autoFilterWheel.exe.config (configuration)
+  - All necessary .dll libraries
+  - .xml documentation files
+  - ReadMe.htm (documentation)
+✓ Complete uninstaller
+✓ Start menu shortcuts
+
+========================================================================
+                        INSTALLER USAGE
+========================================================================
+
+TO DISTRIBUTE:
+- The .exe file is completely portable
+- No additional files needed
+- Can be shared via email, USB, web download, etc.
+
+TO INSTALL (end users):
+1. Download/copy the file autoFilterWheel_Setup_v6.6.0.exe
+2. Right-click → "Run as administrator"
+3. Follow the installation wizard
+4. The driver will automatically appear in ASCOM FilterWheel Chooser
+
+SYSTEM REQUIREMENTS (users):
+- ASCOM Platform 6.0 or higher
+- Windows 7, 8, 10, or 11
+- .NET Framework 4.7.2 or higher
+- Administrator privileges (for installation)
+
+========================================================================
+                           TESTING
+========================================================================
+
+BEFORE DISTRIBUTING, TEST:
+1. Install on a different computer (or virtual machine)
+2. Verify it appears in ASCOM FilterWheel Chooser
+3. Test hardware connection
+4. Test complete uninstallation
+
+QUICK VERIFICATION:
+- Open ASCOM FilterWheel Chooser
+- Look for "autoFilterWheel" in the list
+- Click "Properties" to open configuration
+- Verify COM port can be selected
+
+========================================================================
+                      TROUBLESHOOTING
+========================================================================
+
+IF IT DOESN'T APPEAR IN CHOOSER:
+- Verify installation was run as administrator
+- Check installer log
+- Manually run: "ASCOM.autoFilterWheel.exe /regserver"
+
+IF COMPILATION FAILS:
+- Verify all files are in place
+- Check that project compiles correctly first
+- Review paths in .iss script
+
+IF INSTALLATION FAILS:
+- Verify ASCOM Platform 6 is installed
+- Run as administrator
+- Check that antivirus is not blocking
+
+========================================================================
+                        CREATED FILES
+========================================================================
+
+MAIN SCRIPT:
+AutoFilterWheel_Setup.iss - Inno Setup script
+
+SUPPORT FILES:
+Build_Installer.bat - Automated script (optional)
+compile_installer.cmd - Simple compilation script
+INSTALLER_README.md - Detailed technical documentation
+INSTALLER_INSTRUCTIONS.txt - This file
+
+RESULT:
+autoFilterWheel_Setup_v6.6.0.exe - FINAL INSTALLER (on desktop)
+
+========================================================================
+
+The driver is ready for professional distribution!
+
+For technical support, see:
+- ASCOM Documentation: https://ascom-standards.org/
+- Project repository: [your GitHub]
+
+========================================================================
