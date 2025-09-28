@@ -423,7 +423,27 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.textBoxFilter8.Name = "textBoxFilter8";
             this.textBoxFilter8.Size = new System.Drawing.Size(120, 20);
             this.textBoxFilter8.TabIndex = 26;
-            // 
+            //
+            // tabPageMotorConfig
+            //
+            this.tabPageMotorConfig.Location = new System.Drawing.Point(4, 22);
+            this.tabPageMotorConfig.Name = "tabPageMotorConfig";
+            this.tabPageMotorConfig.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageMotorConfig.Size = new System.Drawing.Size(442, 174);
+            this.tabPageMotorConfig.TabIndex = 2;
+            this.tabPageMotorConfig.Text = "Motor Configuration";
+            this.tabPageMotorConfig.UseVisualStyleBackColor = true;
+            //
+            // tabPageManualControl
+            //
+            this.tabPageManualControl.Location = new System.Drawing.Point(4, 22);
+            this.tabPageManualControl.Name = "tabPageManualControl";
+            this.tabPageManualControl.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageManualControl.Size = new System.Drawing.Size(442, 174);
+            this.tabPageManualControl.TabIndex = 3;
+            this.tabPageManualControl.Text = "Manual Control";
+            this.tabPageManualControl.UseVisualStyleBackColor = true;
+            //
             // tabPageCalibration
             // 
             this.tabPageCalibration.Controls.Add(this.groupBoxBacklashCalibration);
@@ -625,6 +645,8 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         private System.Windows.Forms.Label labelCompilationDate;
         private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage tabPageConfiguration;
+        private System.Windows.Forms.TabPage tabPageMotorConfig;
+        private System.Windows.Forms.TabPage tabPageManualControl;
         private System.Windows.Forms.TabPage tabPageCalibration;
         private System.Windows.Forms.TabPage tabPageLog;
         private System.Windows.Forms.TextBox textBoxLog;
