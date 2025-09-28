@@ -490,6 +490,284 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.groupBoxMotorSettings.TabStop = false;
             this.groupBoxMotorSettings.Text = "Motor Settings";
             //
+            // btnResetMotorConfig
+            //
+            this.btnResetMotorConfig.Enabled = false;
+            this.btnResetMotorConfig.Location = new System.Drawing.Point(265, 85);
+            this.btnResetMotorConfig.Name = "btnResetMotorConfig";
+            this.btnResetMotorConfig.Size = new System.Drawing.Size(75, 25);
+            this.btnResetMotorConfig.TabIndex = 10;
+            this.btnResetMotorConfig.Text = "Reset";
+            this.btnResetMotorConfig.UseVisualStyleBackColor = true;
+            // this.btnResetMotorConfig.Click += new System.EventHandler(this.BtnResetMotorConfig_Click);
+            //
+            // btnSetMotorConfig
+            //
+            this.btnSetMotorConfig.Enabled = false;
+            this.btnSetMotorConfig.Location = new System.Drawing.Point(180, 85);
+            this.btnSetMotorConfig.Name = "btnSetMotorConfig";
+            this.btnSetMotorConfig.Size = new System.Drawing.Size(75, 25);
+            this.btnSetMotorConfig.TabIndex = 9;
+            this.btnSetMotorConfig.Text = "Apply";
+            this.btnSetMotorConfig.UseVisualStyleBackColor = true;
+            // this.btnSetMotorConfig.Click += new System.EventHandler(this.BtnSetMotorConfig_Click);
+            //
+            // btnGetMotorConfig
+            //
+            this.btnGetMotorConfig.Enabled = false;
+            this.btnGetMotorConfig.Location = new System.Drawing.Point(95, 85);
+            this.btnGetMotorConfig.Name = "btnGetMotorConfig";
+            this.btnGetMotorConfig.Size = new System.Drawing.Size(75, 25);
+            this.btnGetMotorConfig.TabIndex = 8;
+            this.btnGetMotorConfig.Text = "Get Config";
+            this.btnGetMotorConfig.UseVisualStyleBackColor = true;
+            // this.btnGetMotorConfig.Click += new System.EventHandler(this.BtnGetMotorConfig_Click);
+            //
+            // numericDisableDelay
+            //
+            this.numericDisableDelay.Location = new System.Drawing.Point(270, 53);
+            this.numericDisableDelay.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.numericDisableDelay.Minimum = new decimal(new int[] {
+            500,
+            0,
+            0,
+            0});
+            this.numericDisableDelay.Name = "numericDisableDelay";
+            this.numericDisableDelay.Size = new System.Drawing.Size(80, 20);
+            this.numericDisableDelay.TabIndex = 7;
+            this.numericDisableDelay.Value = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            //
+            // labelDisableDelay
+            //
+            this.labelDisableDelay.AutoSize = true;
+            this.labelDisableDelay.Location = new System.Drawing.Point(190, 55);
+            this.labelDisableDelay.Name = "labelDisableDelay";
+            this.labelDisableDelay.Size = new System.Drawing.Size(74, 13);
+            this.labelDisableDelay.TabIndex = 6;
+            this.labelDisableDelay.Text = "Disable Delay:";
+            //
+            // numericAcceleration
+            //
+            this.numericAcceleration.Location = new System.Drawing.Point(100, 53);
+            this.numericAcceleration.Maximum = new decimal(new int[] {
+            2000,
+            0,
+            0,
+            0});
+            this.numericAcceleration.Minimum = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
+            this.numericAcceleration.Name = "numericAcceleration";
+            this.numericAcceleration.Size = new System.Drawing.Size(80, 20);
+            this.numericAcceleration.TabIndex = 5;
+            this.numericAcceleration.Value = new decimal(new int[] {
+            500,
+            0,
+            0,
+            0});
+            //
+            // labelAcceleration
+            //
+            this.labelAcceleration.AutoSize = true;
+            this.labelAcceleration.Location = new System.Drawing.Point(20, 55);
+            this.labelAcceleration.Name = "labelAcceleration";
+            this.labelAcceleration.Size = new System.Drawing.Size(69, 13);
+            this.labelAcceleration.TabIndex = 4;
+            this.labelAcceleration.Text = "Acceleration:";
+            //
+            // numericMaxSpeed
+            //
+            this.numericMaxSpeed.Location = new System.Drawing.Point(270, 23);
+            this.numericMaxSpeed.Maximum = new decimal(new int[] {
+            5000,
+            0,
+            0,
+            0});
+            this.numericMaxSpeed.Minimum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            0});
+            this.numericMaxSpeed.Name = "numericMaxSpeed";
+            this.numericMaxSpeed.Size = new System.Drawing.Size(80, 20);
+            this.numericMaxSpeed.TabIndex = 3;
+            this.numericMaxSpeed.Value = new decimal(new int[] {
+            2000,
+            0,
+            0,
+            0});
+            //
+            // labelMaxSpeed
+            //
+            this.labelMaxSpeed.AutoSize = true;
+            this.labelMaxSpeed.Location = new System.Drawing.Point(190, 25);
+            this.labelMaxSpeed.Name = "labelMaxSpeed";
+            this.labelMaxSpeed.Size = new System.Drawing.Size(70, 13);
+            this.labelMaxSpeed.TabIndex = 2;
+            this.labelMaxSpeed.Text = "Max Speed:";
+            //
+            // numericMotorSpeed
+            //
+            this.numericMotorSpeed.Location = new System.Drawing.Point(100, 23);
+            this.numericMotorSpeed.Maximum = new decimal(new int[] {
+            3000,
+            0,
+            0,
+            0});
+            this.numericMotorSpeed.Minimum = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
+            this.numericMotorSpeed.Name = "numericMotorSpeed";
+            this.numericMotorSpeed.Size = new System.Drawing.Size(80, 20);
+            this.numericMotorSpeed.TabIndex = 1;
+            this.numericMotorSpeed.Value = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            //
+            // labelMotorSpeed
+            //
+            this.labelMotorSpeed.AutoSize = true;
+            this.labelMotorSpeed.Location = new System.Drawing.Point(20, 25);
+            this.labelMotorSpeed.Name = "labelMotorSpeed";
+            this.labelMotorSpeed.Size = new System.Drawing.Size(41, 13);
+            this.labelMotorSpeed.TabIndex = 0;
+            this.labelMotorSpeed.Text = "Speed:";
+            //
+            // numericStepsPerRev
+            //
+            this.numericStepsPerRev.Location = new System.Drawing.Point(330, 23);
+            this.numericStepsPerRev.Maximum = new decimal(new int[] {
+            8192,
+            0,
+            0,
+            0});
+            this.numericStepsPerRev.Minimum = new decimal(new int[] {
+            200,
+            0,
+            0,
+            0});
+            this.numericStepsPerRev.Name = "numericStepsPerRev";
+            this.numericStepsPerRev.Size = new System.Drawing.Size(80, 20);
+            this.numericStepsPerRev.TabIndex = 9;
+            this.numericStepsPerRev.Value = new decimal(new int[] {
+            2048,
+            0,
+            0,
+            0});
+            //
+            // labelStepsPerRev
+            //
+            this.labelStepsPerRev.AutoSize = true;
+            this.labelStepsPerRev.Location = new System.Drawing.Point(250, 25);
+            this.labelStepsPerRev.Name = "labelStepsPerRev";
+            this.labelStepsPerRev.Size = new System.Drawing.Size(74, 13);
+            this.labelStepsPerRev.TabIndex = 8;
+            this.labelStepsPerRev.Text = "Steps/Rev:";
+            //
+            // btnGetStepsPerRev
+            //
+            this.btnGetStepsPerRev.Enabled = false;
+            this.btnGetStepsPerRev.Location = new System.Drawing.Point(415, 20);
+            this.btnGetStepsPerRev.Name = "btnGetStepsPerRev";
+            this.btnGetStepsPerRev.Size = new System.Drawing.Size(35, 23);
+            this.btnGetStepsPerRev.TabIndex = 11;
+            this.btnGetStepsPerRev.Text = "Get";
+            this.btnGetStepsPerRev.UseVisualStyleBackColor = true;
+            // this.btnGetStepsPerRev.Click += new System.EventHandler(this.BtnGetStepsPerRev_Click);
+            //
+            // btnSetStepsPerRev
+            //
+            this.btnSetStepsPerRev.Enabled = false;
+            this.btnSetStepsPerRev.Location = new System.Drawing.Point(451, 20);
+            this.btnSetStepsPerRev.Name = "btnSetStepsPerRev";
+            this.btnSetStepsPerRev.Size = new System.Drawing.Size(35, 23);
+            this.btnSetStepsPerRev.TabIndex = 12;
+            this.btnSetStepsPerRev.Text = "Set";
+            this.btnSetStepsPerRev.UseVisualStyleBackColor = true;
+            // this.btnSetStepsPerRev.Click += new System.EventHandler(this.BtnSetStepsPerRev_Click);
+            //
+            // groupBoxDirection
+            //
+            this.groupBoxDirection.Controls.Add(this.btnSetDirectionConfig);
+            this.groupBoxDirection.Controls.Add(this.btnGetDirectionConfig);
+            this.groupBoxDirection.Controls.Add(this.checkBoxReverse);
+            this.groupBoxDirection.Controls.Add(this.radioBidirectional);
+            this.groupBoxDirection.Controls.Add(this.radioUnidirectional);
+            this.groupBoxDirection.Location = new System.Drawing.Point(10, 140);
+            this.groupBoxDirection.Name = "groupBoxDirection";
+            this.groupBoxDirection.Size = new System.Drawing.Size(300, 60);
+            this.groupBoxDirection.TabIndex = 1;
+            this.groupBoxDirection.TabStop = false;
+            this.groupBoxDirection.Text = "Direction Configuration";
+            //
+            // btnSetDirectionConfig
+            //
+            this.btnSetDirectionConfig.Enabled = false;
+            this.btnSetDirectionConfig.Location = new System.Drawing.Point(250, 20);
+            this.btnSetDirectionConfig.Name = "btnSetDirectionConfig";
+            this.btnSetDirectionConfig.Size = new System.Drawing.Size(40, 25);
+            this.btnSetDirectionConfig.TabIndex = 4;
+            this.btnSetDirectionConfig.Text = "Set";
+            this.btnSetDirectionConfig.UseVisualStyleBackColor = true;
+            // this.btnSetDirectionConfig.Click += new System.EventHandler(this.BtnSetDirectionConfig_Click);
+            //
+            // btnGetDirectionConfig
+            //
+            this.btnGetDirectionConfig.Enabled = false;
+            this.btnGetDirectionConfig.Location = new System.Drawing.Point(205, 20);
+            this.btnGetDirectionConfig.Name = "btnGetDirectionConfig";
+            this.btnGetDirectionConfig.Size = new System.Drawing.Size(40, 25);
+            this.btnGetDirectionConfig.TabIndex = 3;
+            this.btnGetDirectionConfig.Text = "Get";
+            this.btnGetDirectionConfig.UseVisualStyleBackColor = true;
+            // this.btnGetDirectionConfig.Click += new System.EventHandler(this.BtnGetDirectionConfig_Click);
+            //
+            // checkBoxReverse
+            //
+            this.checkBoxReverse.AutoSize = true;
+            this.checkBoxReverse.Location = new System.Drawing.Point(140, 25);
+            this.checkBoxReverse.Name = "checkBoxReverse";
+            this.checkBoxReverse.Size = new System.Drawing.Size(66, 17);
+            this.checkBoxReverse.TabIndex = 2;
+            this.checkBoxReverse.Text = "Reverse";
+            this.checkBoxReverse.UseVisualStyleBackColor = true;
+            //
+            // radioBidirectional
+            //
+            this.radioBidirectional.AutoSize = true;
+            this.radioBidirectional.Location = new System.Drawing.Point(75, 25);
+            this.radioBidirectional.Name = "radioBidirectional";
+            this.radioBidirectional.Size = new System.Drawing.Size(59, 17);
+            this.radioBidirectional.TabIndex = 1;
+            this.radioBidirectional.Text = "Bi-Dir";
+            this.radioBidirectional.UseVisualStyleBackColor = true;
+            //
+            // radioUnidirectional
+            //
+            this.radioUnidirectional.AutoSize = true;
+            this.radioUnidirectional.Checked = true;
+            this.radioUnidirectional.Location = new System.Drawing.Point(10, 25);
+            this.radioUnidirectional.Name = "radioUnidirectional";
+            this.radioUnidirectional.Size = new System.Drawing.Size(59, 17);
+            this.radioUnidirectional.TabIndex = 0;
+            this.radioUnidirectional.TabStop = true;
+            this.radioUnidirectional.Text = "Uni-Dir";
+            this.radioUnidirectional.UseVisualStyleBackColor = true;
+            //
             // tabPageMotorConfig
             //
             this.tabPageMotorConfig.Controls.Add(this.groupBoxDirection);
@@ -513,6 +791,120 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.tabPageManualControl.TabIndex = 3;
             this.tabPageManualControl.Text = "Manual Control";
             this.tabPageManualControl.UseVisualStyleBackColor = true;
+            //
+            // groupBoxStepping
+            //
+            this.groupBoxStepping.Controls.Add(this.btnGetCurrentStep);
+            this.groupBoxStepping.Controls.Add(this.labelCurrentStep);
+            this.groupBoxStepping.Controls.Add(this.btnStepTo);
+            this.groupBoxStepping.Controls.Add(this.btnStepBackward);
+            this.groupBoxStepping.Controls.Add(this.btnStepForward);
+            this.groupBoxStepping.Controls.Add(this.numericStepAmount);
+            this.groupBoxStepping.Controls.Add(this.labelStepAmount);
+            this.groupBoxStepping.Location = new System.Drawing.Point(10, 10);
+            this.groupBoxStepping.Name = "groupBoxStepping";
+            this.groupBoxStepping.Size = new System.Drawing.Size(400, 120);
+            this.groupBoxStepping.TabIndex = 0;
+            this.groupBoxStepping.TabStop = false;
+            this.groupBoxStepping.Text = "Manual Stepping";
+            //
+            // labelStepAmount
+            //
+            this.labelStepAmount.AutoSize = true;
+            this.labelStepAmount.Location = new System.Drawing.Point(20, 25);
+            this.labelStepAmount.Name = "labelStepAmount";
+            this.labelStepAmount.Size = new System.Drawing.Size(37, 13);
+            this.labelStepAmount.TabIndex = 0;
+            this.labelStepAmount.Text = "Steps:";
+            //
+            // numericStepAmount
+            //
+            this.numericStepAmount.Location = new System.Drawing.Point(65, 23);
+            this.numericStepAmount.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.numericStepAmount.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericStepAmount.Name = "numericStepAmount";
+            this.numericStepAmount.Size = new System.Drawing.Size(80, 20);
+            this.numericStepAmount.TabIndex = 1;
+            this.numericStepAmount.Value = new decimal(new int[] {
+            10,
+            0,
+            0,
+            0});
+            //
+            // btnStepForward
+            //
+            this.btnStepForward.Enabled = false;
+            this.btnStepForward.Location = new System.Drawing.Point(20, 55);
+            this.btnStepForward.Name = "btnStepForward";
+            this.btnStepForward.Size = new System.Drawing.Size(80, 25);
+            this.btnStepForward.TabIndex = 2;
+            this.btnStepForward.Text = "Step Forward";
+            this.btnStepForward.UseVisualStyleBackColor = true;
+            // this.btnStepForward.Click += new System.EventHandler(this.BtnStepForward_Click);
+            //
+            // btnStepBackward
+            //
+            this.btnStepBackward.Enabled = false;
+            this.btnStepBackward.Location = new System.Drawing.Point(110, 55);
+            this.btnStepBackward.Name = "btnStepBackward";
+            this.btnStepBackward.Size = new System.Drawing.Size(80, 25);
+            this.btnStepBackward.TabIndex = 3;
+            this.btnStepBackward.Text = "Step Backward";
+            this.btnStepBackward.UseVisualStyleBackColor = true;
+            // this.btnStepBackward.Click += new System.EventHandler(this.BtnStepBackward_Click);
+            //
+            // btnStepTo
+            //
+            this.btnStepTo.Enabled = false;
+            this.btnStepTo.Location = new System.Drawing.Point(200, 55);
+            this.btnStepTo.Name = "btnStepTo";
+            this.btnStepTo.Size = new System.Drawing.Size(80, 25);
+            this.btnStepTo.TabIndex = 4;
+            this.btnStepTo.Text = "Step To";
+            this.btnStepTo.UseVisualStyleBackColor = true;
+            // this.btnStepTo.Click += new System.EventHandler(this.BtnStepTo_Click);
+            //
+            // labelCurrentStep
+            //
+            this.labelCurrentStep.AutoSize = true;
+            this.labelCurrentStep.Location = new System.Drawing.Point(200, 25);
+            this.labelCurrentStep.Name = "labelCurrentStep";
+            this.labelCurrentStep.Size = new System.Drawing.Size(75, 13);
+            this.labelCurrentStep.TabIndex = 5;
+            this.labelCurrentStep.Text = "Current Step: 0";
+            //
+            // btnGetCurrentStep
+            //
+            this.btnGetCurrentStep.Enabled = false;
+            this.btnGetCurrentStep.Location = new System.Drawing.Point(300, 20);
+            this.btnGetCurrentStep.Name = "btnGetCurrentStep";
+            this.btnGetCurrentStep.Size = new System.Drawing.Size(80, 25);
+            this.btnGetCurrentStep.TabIndex = 6;
+            this.btnGetCurrentStep.Text = "Get Current";
+            this.btnGetCurrentStep.UseVisualStyleBackColor = true;
+            // this.btnGetCurrentStep.Click += new System.EventHandler(this.BtnGetCurrentStep_Click);
+            //
+            // btnEmergencyStop
+            //
+            this.btnEmergencyStop.BackColor = System.Drawing.Color.Red;
+            this.btnEmergencyStop.Enabled = false;
+            this.btnEmergencyStop.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnEmergencyStop.ForeColor = System.Drawing.Color.White;
+            this.btnEmergencyStop.Location = new System.Drawing.Point(300, 140);
+            this.btnEmergencyStop.Name = "btnEmergencyStop";
+            this.btnEmergencyStop.Size = new System.Drawing.Size(100, 30);
+            this.btnEmergencyStop.TabIndex = 1;
+            this.btnEmergencyStop.Text = "EMERGENCY STOP";
+            this.btnEmergencyStop.UseVisualStyleBackColor = false;
+            // this.btnEmergencyStop.Click += new System.EventHandler(this.BtnEmergencyStop_Click);
             //
             // tabPageCalibration
             // 
@@ -693,6 +1085,20 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.tabControl.ResumeLayout(false);
             this.tabPageConfiguration.ResumeLayout(false);
             this.tabPageConfiguration.PerformLayout();
+            this.tabPageMotorConfig.ResumeLayout(false);
+            this.groupBoxMotorSettings.ResumeLayout(false);
+            this.groupBoxMotorSettings.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericDisableDelay)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericAcceleration)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericMaxSpeed)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericMotorSpeed)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericStepsPerRev)).EndInit();
+            this.groupBoxDirection.ResumeLayout(false);
+            this.groupBoxDirection.PerformLayout();
+            this.tabPageManualControl.ResumeLayout(false);
+            this.groupBoxStepping.ResumeLayout(false);
+            this.groupBoxStepping.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericStepAmount)).EndInit();
             this.tabPageCalibration.ResumeLayout(false);
             this.groupBoxCalibration.ResumeLayout(false);
             this.groupBoxBacklashCalibration.ResumeLayout(false);
