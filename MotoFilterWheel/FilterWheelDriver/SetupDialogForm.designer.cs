@@ -53,10 +53,11 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SetupDialogForm));
             this.cmdOK = new System.Windows.Forms.Button();
             this.cmdCancel = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
             this.picASCOM = new System.Windows.Forms.PictureBox();
             this.label2 = new System.Windows.Forms.Label();
             this.comboBoxComPort = new System.Windows.Forms.ComboBox();
+            this.btnSetPort = new System.Windows.Forms.Button();
+            this.labelOr = new System.Windows.Forms.Label();
             this.btnConnect = new System.Windows.Forms.Button();
             this.btnDisconnect = new System.Windows.Forms.Button();
             this.btnSet = new System.Windows.Forms.Button();
@@ -64,6 +65,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.labelSelectFilter = new System.Windows.Forms.Label();
             this.comboBoxSelectFilter = new System.Windows.Forms.ComboBox();
             this.btnSelectFilter = new System.Windows.Forms.Button();
+            this.panelSeparator = new System.Windows.Forms.Panel();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabPageConfiguration = new System.Windows.Forms.TabPage();
             this.labelFilterCount = new System.Windows.Forms.Label();
@@ -88,17 +90,14 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.tabPageMotorConfig = new System.Windows.Forms.TabPage();
             this.groupBoxDirection = new System.Windows.Forms.GroupBox();
             this.btnSetDirectionConfig = new System.Windows.Forms.Button();
-            this.btnGetDirectionConfig = new System.Windows.Forms.Button();
             this.checkBoxReverse = new System.Windows.Forms.CheckBox();
             this.radioBidirectional = new System.Windows.Forms.RadioButton();
             this.radioUnidirectional = new System.Windows.Forms.RadioButton();
             this.groupBoxMotorSettings = new System.Windows.Forms.GroupBox();
             this.btnSetStepsPerRev = new System.Windows.Forms.Button();
-            this.btnGetStepsPerRev = new System.Windows.Forms.Button();
             this.numericStepsPerRev = new System.Windows.Forms.NumericUpDown();
             this.btnResetMotorConfig = new System.Windows.Forms.Button();
             this.btnSetMotorConfig = new System.Windows.Forms.Button();
-            this.btnGetMotorConfig = new System.Windows.Forms.Button();
             this.numericDisableDelay = new System.Windows.Forms.NumericUpDown();
             this.labelDisableDelay = new System.Windows.Forms.Label();
             this.numericAcceleration = new System.Windows.Forms.NumericUpDown();
@@ -133,6 +132,11 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.numericStepAmount = new System.Windows.Forms.NumericUpDown();
             this.labelStepAmount = new System.Windows.Forms.Label();
             this.btnEmergencyStop = new System.Windows.Forms.Button();
+            this.tabPageDisplay = new System.Windows.Forms.TabPage();
+            this.groupBoxDisplayRotation = new System.Windows.Forms.GroupBox();
+            this.btnSetDisplayRotation = new System.Windows.Forms.Button();
+            this.radioDisplayInverted = new System.Windows.Forms.RadioButton();
+            this.radioDisplayNormal = new System.Windows.Forms.RadioButton();
             this.tabPageLog = new System.Windows.Forms.TabPage();
             this.textBoxLog = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.picASCOM)).BeginInit();
@@ -152,6 +156,8 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.tabPageManualControl.SuspendLayout();
             this.groupBoxStepping.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericStepAmount)).BeginInit();
+            this.tabPageDisplay.SuspendLayout();
+            this.groupBoxDisplayRotation.SuspendLayout();
             this.tabPageLog.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -159,7 +165,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // 
             this.cmdOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.cmdOK.Location = new System.Drawing.Point(513, 414);
+            this.cmdOK.Location = new System.Drawing.Point(513, 340);
             this.cmdOK.Name = "cmdOK";
             this.cmdOK.Size = new System.Drawing.Size(59, 24);
             this.cmdOK.TabIndex = 0;
@@ -171,7 +177,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // 
             this.cmdCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cmdCancel.Location = new System.Drawing.Point(448, 414);
+            this.cmdCancel.Location = new System.Drawing.Point(448, 340);
             this.cmdCancel.Name = "cmdCancel";
             this.cmdCancel.Size = new System.Drawing.Size(59, 24);
             this.cmdCancel.TabIndex = 1;
@@ -179,20 +185,12 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.cmdCancel.UseVisualStyleBackColor = true;
             this.cmdCancel.Click += new System.EventHandler(this.CmdCancel_Click);
             // 
-            // label1
-            // 
-            this.label1.Location = new System.Drawing.Point(12, 9);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(123, 31);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "autoFilterWheel";
-            // 
             // picASCOM
             // 
             this.picASCOM.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.picASCOM.Cursor = System.Windows.Forms.Cursors.Hand;
             this.picASCOM.Image = ((System.Drawing.Image)(resources.GetObject("picASCOM.Image")));
-            this.picASCOM.Location = new System.Drawing.Point(406, 9);
+            this.picASCOM.Location = new System.Drawing.Point(529, 9);
             this.picASCOM.Name = "picASCOM";
             this.picASCOM.Size = new System.Drawing.Size(48, 56);
             this.picASCOM.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
@@ -204,7 +202,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(13, 90);
+            this.label2.Location = new System.Drawing.Point(12, 12);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(58, 13);
             this.label2.TabIndex = 5;
@@ -213,14 +211,33 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // comboBoxComPort
             // 
             this.comboBoxComPort.FormattingEnabled = true;
-            this.comboBoxComPort.Location = new System.Drawing.Point(77, 87);
+            this.comboBoxComPort.Location = new System.Drawing.Point(76, 9);
             this.comboBoxComPort.Name = "comboBoxComPort";
             this.comboBoxComPort.Size = new System.Drawing.Size(104, 21);
             this.comboBoxComPort.TabIndex = 7;
-            // 
+            //
+            // btnSetPort
+            //
+            this.btnSetPort.Location = new System.Drawing.Point(189, 9);
+            this.btnSetPort.Name = "btnSetPort";
+            this.btnSetPort.Size = new System.Drawing.Size(60, 23);
+            this.btnSetPort.TabIndex = 8;
+            this.btnSetPort.Text = "Set port";
+            this.btnSetPort.UseVisualStyleBackColor = true;
+            //
+            // labelOr
+            //
+            this.labelOr.AutoSize = true;
+            this.labelOr.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.labelOr.Location = new System.Drawing.Point(255, 14);
+            this.labelOr.Name = "labelOr";
+            this.labelOr.Size = new System.Drawing.Size(29, 13);
+            this.labelOr.TabIndex = 9;
+            this.labelOr.Text = "- or -";
+            //
             // btnConnect
-            // 
-            this.btnConnect.Location = new System.Drawing.Point(190, 87);
+            //
+            this.btnConnect.Location = new System.Drawing.Point(290, 9);
             this.btnConnect.Name = "btnConnect";
             this.btnConnect.Size = new System.Drawing.Size(60, 23);
             this.btnConnect.TabIndex = 6;
@@ -231,7 +248,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // btnDisconnect
             // 
             this.btnDisconnect.Enabled = false;
-            this.btnDisconnect.Location = new System.Drawing.Point(260, 87);
+            this.btnDisconnect.Location = new System.Drawing.Point(360, 9);
             this.btnDisconnect.Name = "btnDisconnect";
             this.btnDisconnect.Size = new System.Drawing.Size(80, 23);
             this.btnDisconnect.TabIndex = 7;
@@ -255,7 +272,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.labelCompilationDate.AutoSize = true;
             this.labelCompilationDate.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelCompilationDate.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.labelCompilationDate.Location = new System.Drawing.Point(12, 35);
+            this.labelCompilationDate.Location = new System.Drawing.Point(16, 343);
             this.labelCompilationDate.Name = "labelCompilationDate";
             this.labelCompilationDate.Size = new System.Drawing.Size(148, 13);
             this.labelCompilationDate.TabIndex = 29;
@@ -264,7 +281,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // labelSelectFilter
             // 
             this.labelSelectFilter.AutoSize = true;
-            this.labelSelectFilter.Location = new System.Drawing.Point(13, 130);
+            this.labelSelectFilter.Location = new System.Drawing.Point(12, 52);
             this.labelSelectFilter.Name = "labelSelectFilter";
             this.labelSelectFilter.Size = new System.Drawing.Size(65, 13);
             this.labelSelectFilter.TabIndex = 40;
@@ -274,7 +291,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // 
             this.comboBoxSelectFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxSelectFilter.FormattingEnabled = true;
-            this.comboBoxSelectFilter.Location = new System.Drawing.Point(88, 127);
+            this.comboBoxSelectFilter.Location = new System.Drawing.Point(87, 49);
             this.comboBoxSelectFilter.Name = "comboBoxSelectFilter";
             this.comboBoxSelectFilter.Size = new System.Drawing.Size(150, 21);
             this.comboBoxSelectFilter.TabIndex = 41;
@@ -282,12 +299,20 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // btnSelectFilter
             // 
             this.btnSelectFilter.Enabled = false;
-            this.btnSelectFilter.Location = new System.Drawing.Point(250, 125);
+            this.btnSelectFilter.Location = new System.Drawing.Point(249, 47);
             this.btnSelectFilter.Name = "btnSelectFilter";
             this.btnSelectFilter.Size = new System.Drawing.Size(90, 25);
             this.btnSelectFilter.TabIndex = 42;
             this.btnSelectFilter.Text = "Select Filter";
             this.btnSelectFilter.UseVisualStyleBackColor = true;
+            // 
+            // panelSeparator
+            // 
+            this.panelSeparator.BackColor = System.Drawing.SystemColors.ControlDark;
+            this.panelSeparator.Location = new System.Drawing.Point(11, 77);
+            this.panelSeparator.Name = "panelSeparator";
+            this.panelSeparator.Size = new System.Drawing.Size(564, 1);
+            this.panelSeparator.TabIndex = 43;
             // 
             // tabControl
             // 
@@ -295,8 +320,9 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.tabControl.Controls.Add(this.tabPageMotorConfig);
             this.tabControl.Controls.Add(this.tabPageCalibration);
             this.tabControl.Controls.Add(this.tabPageManualControl);
+            this.tabControl.Controls.Add(this.tabPageDisplay);
             this.tabControl.Controls.Add(this.tabPageLog);
-            this.tabControl.Location = new System.Drawing.Point(12, 160);
+            this.tabControl.Location = new System.Drawing.Point(11, 82);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
             this.tabControl.Size = new System.Drawing.Size(564, 250);
@@ -518,7 +544,6 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // groupBoxDirection
             // 
             this.groupBoxDirection.Controls.Add(this.btnSetDirectionConfig);
-            this.groupBoxDirection.Controls.Add(this.btnGetDirectionConfig);
             this.groupBoxDirection.Controls.Add(this.checkBoxReverse);
             this.groupBoxDirection.Controls.Add(this.radioBidirectional);
             this.groupBoxDirection.Controls.Add(this.radioUnidirectional);
@@ -532,22 +557,12 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // btnSetDirectionConfig
             // 
             this.btnSetDirectionConfig.Enabled = false;
-            this.btnSetDirectionConfig.Location = new System.Drawing.Point(250, 20);
+            this.btnSetDirectionConfig.Location = new System.Drawing.Point(220, 20);
             this.btnSetDirectionConfig.Name = "btnSetDirectionConfig";
             this.btnSetDirectionConfig.Size = new System.Drawing.Size(40, 25);
             this.btnSetDirectionConfig.TabIndex = 4;
             this.btnSetDirectionConfig.Text = "Set";
             this.btnSetDirectionConfig.UseVisualStyleBackColor = true;
-            // 
-            // btnGetDirectionConfig
-            // 
-            this.btnGetDirectionConfig.Enabled = false;
-            this.btnGetDirectionConfig.Location = new System.Drawing.Point(205, 20);
-            this.btnGetDirectionConfig.Name = "btnGetDirectionConfig";
-            this.btnGetDirectionConfig.Size = new System.Drawing.Size(40, 25);
-            this.btnGetDirectionConfig.TabIndex = 3;
-            this.btnGetDirectionConfig.Text = "Get";
-            this.btnGetDirectionConfig.UseVisualStyleBackColor = true;
             // 
             // checkBoxReverse
             // 
@@ -584,11 +599,9 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // groupBoxMotorSettings
             // 
             this.groupBoxMotorSettings.Controls.Add(this.btnSetStepsPerRev);
-            this.groupBoxMotorSettings.Controls.Add(this.btnGetStepsPerRev);
             this.groupBoxMotorSettings.Controls.Add(this.numericStepsPerRev);
             this.groupBoxMotorSettings.Controls.Add(this.btnResetMotorConfig);
             this.groupBoxMotorSettings.Controls.Add(this.btnSetMotorConfig);
-            this.groupBoxMotorSettings.Controls.Add(this.btnGetMotorConfig);
             this.groupBoxMotorSettings.Controls.Add(this.numericDisableDelay);
             this.groupBoxMotorSettings.Controls.Add(this.labelDisableDelay);
             this.groupBoxMotorSettings.Controls.Add(this.numericAcceleration);
@@ -608,22 +621,12 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // btnSetStepsPerRev
             // 
             this.btnSetStepsPerRev.Enabled = false;
-            this.btnSetStepsPerRev.Location = new System.Drawing.Point(478, 50);
+            this.btnSetStepsPerRev.Location = new System.Drawing.Point(455, 50);
             this.btnSetStepsPerRev.Name = "btnSetStepsPerRev";
             this.btnSetStepsPerRev.Size = new System.Drawing.Size(35, 23);
             this.btnSetStepsPerRev.TabIndex = 12;
             this.btnSetStepsPerRev.Text = "Set";
             this.btnSetStepsPerRev.UseVisualStyleBackColor = true;
-            // 
-            // btnGetStepsPerRev
-            // 
-            this.btnGetStepsPerRev.Enabled = false;
-            this.btnGetStepsPerRev.Location = new System.Drawing.Point(437, 50);
-            this.btnGetStepsPerRev.Name = "btnGetStepsPerRev";
-            this.btnGetStepsPerRev.Size = new System.Drawing.Size(35, 23);
-            this.btnGetStepsPerRev.TabIndex = 11;
-            this.btnGetStepsPerRev.Text = "Get";
-            this.btnGetStepsPerRev.UseVisualStyleBackColor = true;
             // 
             // numericStepsPerRev
             // 
@@ -666,16 +669,6 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.btnSetMotorConfig.TabIndex = 9;
             this.btnSetMotorConfig.Text = "Apply";
             this.btnSetMotorConfig.UseVisualStyleBackColor = true;
-            // 
-            // btnGetMotorConfig
-            // 
-            this.btnGetMotorConfig.Enabled = false;
-            this.btnGetMotorConfig.Location = new System.Drawing.Point(95, 85);
-            this.btnGetMotorConfig.Name = "btnGetMotorConfig";
-            this.btnGetMotorConfig.Size = new System.Drawing.Size(75, 25);
-            this.btnGetMotorConfig.TabIndex = 8;
-            this.btnGetMotorConfig.Text = "Get Config";
-            this.btnGetMotorConfig.UseVisualStyleBackColor = true;
             // 
             // numericDisableDelay
             // 
@@ -1113,6 +1106,61 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.btnEmergencyStop.Text = "EMERGENCY STOP";
             this.btnEmergencyStop.UseVisualStyleBackColor = false;
             // 
+            // tabPageDisplay
+            // 
+            this.tabPageDisplay.Controls.Add(this.groupBoxDisplayRotation);
+            this.tabPageDisplay.Location = new System.Drawing.Point(4, 22);
+            this.tabPageDisplay.Name = "tabPageDisplay";
+            this.tabPageDisplay.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageDisplay.Size = new System.Drawing.Size(556, 224);
+            this.tabPageDisplay.TabIndex = 5;
+            this.tabPageDisplay.Text = "Display Configuration";
+            this.tabPageDisplay.UseVisualStyleBackColor = true;
+            // 
+            // groupBoxDisplayRotation
+            // 
+            this.groupBoxDisplayRotation.Controls.Add(this.btnSetDisplayRotation);
+            this.groupBoxDisplayRotation.Controls.Add(this.radioDisplayInverted);
+            this.groupBoxDisplayRotation.Controls.Add(this.radioDisplayNormal);
+            this.groupBoxDisplayRotation.Location = new System.Drawing.Point(10, 10);
+            this.groupBoxDisplayRotation.Name = "groupBoxDisplayRotation";
+            this.groupBoxDisplayRotation.Size = new System.Drawing.Size(540, 60);
+            this.groupBoxDisplayRotation.TabIndex = 0;
+            this.groupBoxDisplayRotation.TabStop = false;
+            this.groupBoxDisplayRotation.Text = "Display Rotation";
+            // 
+            // btnSetDisplayRotation
+            // 
+            this.btnSetDisplayRotation.Enabled = false;
+            this.btnSetDisplayRotation.Location = new System.Drawing.Point(200, 20);
+            this.btnSetDisplayRotation.Name = "btnSetDisplayRotation";
+            this.btnSetDisplayRotation.Size = new System.Drawing.Size(75, 25);
+            this.btnSetDisplayRotation.TabIndex = 3;
+            this.btnSetDisplayRotation.Text = "Apply";
+            this.btnSetDisplayRotation.UseVisualStyleBackColor = true;
+            // 
+            // radioDisplayInverted
+            // 
+            this.radioDisplayInverted.AutoSize = true;
+            this.radioDisplayInverted.Location = new System.Drawing.Point(80, 25);
+            this.radioDisplayInverted.Name = "radioDisplayInverted";
+            this.radioDisplayInverted.Size = new System.Drawing.Size(95, 17);
+            this.radioDisplayInverted.TabIndex = 1;
+            this.radioDisplayInverted.Text = "Inverted (180°)";
+            this.radioDisplayInverted.UseVisualStyleBackColor = true;
+            // 
+            // radioDisplayNormal
+            // 
+            this.radioDisplayNormal.AutoSize = true;
+            this.radioDisplayNormal.Checked = true;
+            this.radioDisplayNormal.Location = new System.Drawing.Point(10, 25);
+            this.radioDisplayNormal.Name = "radioDisplayNormal";
+            this.radioDisplayNormal.Size = new System.Drawing.Size(58, 17);
+            this.radioDisplayNormal.TabIndex = 0;
+            this.radioDisplayNormal.TabStop = true;
+            this.radioDisplayNormal.Text = "Normal";
+            this.radioDisplayNormal.UseVisualStyleBackColor = true;
+            // 
             // tabPageLog
             // 
             this.tabPageLog.Controls.Add(this.textBoxLog);
@@ -1142,18 +1190,20 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(589, 450);
+            this.ClientSize = new System.Drawing.Size(589, 376);
             this.Controls.Add(this.tabControl);
+            this.Controls.Add(this.panelSeparator);
             this.Controls.Add(this.btnSelectFilter);
             this.Controls.Add(this.comboBoxSelectFilter);
             this.Controls.Add(this.labelSelectFilter);
             this.Controls.Add(this.labelCompilationDate);
             this.Controls.Add(this.btnDisconnect);
             this.Controls.Add(this.btnConnect);
+            this.Controls.Add(this.labelOr);
+            this.Controls.Add(this.btnSetPort);
             this.Controls.Add(this.comboBoxComPort);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.picASCOM);
-            this.Controls.Add(this.label1);
             this.Controls.Add(this.cmdCancel);
             this.Controls.Add(this.cmdOK);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -1187,6 +1237,9 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.groupBoxStepping.ResumeLayout(false);
             this.groupBoxStepping.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericStepAmount)).EndInit();
+            this.tabPageDisplay.ResumeLayout(false);
+            this.groupBoxDisplayRotation.ResumeLayout(false);
+            this.groupBoxDisplayRotation.PerformLayout();
             this.tabPageLog.ResumeLayout(false);
             this.tabPageLog.PerformLayout();
             this.ResumeLayout(false);
@@ -1198,10 +1251,11 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
         private System.Windows.Forms.Button cmdOK;
         private System.Windows.Forms.Button cmdCancel;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.PictureBox picASCOM;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox comboBoxComPort;
+        private System.Windows.Forms.Button btnSetPort;
+        private System.Windows.Forms.Label labelOr;
         private System.Windows.Forms.Button btnConnect;
         private System.Windows.Forms.Button btnDisconnect;
         private System.Windows.Forms.Button btnSet;
@@ -1209,6 +1263,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         private System.Windows.Forms.Label labelSelectFilter;
         private System.Windows.Forms.ComboBox comboBoxSelectFilter;
         private System.Windows.Forms.Button btnSelectFilter;
+        private System.Windows.Forms.Panel panelSeparator;
         private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage tabPageConfiguration;
         private System.Windows.Forms.TabPage tabPageMotorConfig;
@@ -1251,10 +1306,8 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         private System.Windows.Forms.Label labelFilter8;
         private System.Windows.Forms.GroupBox groupBoxMotorSettings;
         private System.Windows.Forms.Button btnSetStepsPerRev;
-        private System.Windows.Forms.Button btnGetStepsPerRev;
         private System.Windows.Forms.Button btnResetMotorConfig;
         private System.Windows.Forms.Button btnSetMotorConfig;
-        private System.Windows.Forms.Button btnGetMotorConfig;
         private System.Windows.Forms.NumericUpDown numericDisableDelay;
         private System.Windows.Forms.Label labelDisableDelay;
         private System.Windows.Forms.NumericUpDown numericAcceleration;
@@ -1269,7 +1322,6 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         private System.Windows.Forms.RadioButton radioUnidirectional;
         private System.Windows.Forms.RadioButton radioBidirectional;
         private System.Windows.Forms.CheckBox checkBoxReverse;
-        private System.Windows.Forms.Button btnGetDirectionConfig;
         private System.Windows.Forms.Button btnSetDirectionConfig;
         private System.Windows.Forms.GroupBox groupBoxStepping;
         private System.Windows.Forms.Label labelStepAmount;
@@ -1280,5 +1332,10 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         private System.Windows.Forms.Label labelCurrentStep;
         private System.Windows.Forms.Button btnGetCurrentStep;
         private System.Windows.Forms.Button btnEmergencyStop;
+        private System.Windows.Forms.TabPage tabPageDisplay;
+        private System.Windows.Forms.GroupBox groupBoxDisplayRotation;
+        private System.Windows.Forms.RadioButton radioDisplayNormal;
+        private System.Windows.Forms.RadioButton radioDisplayInverted;
+        private System.Windows.Forms.Button btnSetDisplayRotation;
     }
 }
