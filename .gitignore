@@ -350,3 +350,7 @@ FodyWeavers.xsd
 # Local development scripts
 *.bat
 *.cmd
+
+# Claude Code files
+.claude/
+CLAUDE.md
