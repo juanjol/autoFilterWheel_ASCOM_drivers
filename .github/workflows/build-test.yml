@@ -16,7 +16,7 @@ jobs:
 
     - name: Validate project structure
       run: |
-        Write-Host "🔍 Validating autoFilterWheel project structure..."
+        Write-Host "Validating autoFilterWheel project structure..."
 
         # Check essential files exist
         $requiredFiles = @(
@@ -29,24 +29,24 @@ jobs:
         $allValid = $true
         foreach ($file in $requiredFiles) {
           if (Test-Path $file) {
-            Write-Host "✓ $file - Found"
+            Write-Host "OK $file - Found"
           } else {
-            Write-Host "✗ $file - Missing"
+            Write-Host "ERROR $file - Missing"
             $allValid = $false
           }
         }
 
         if ($allValid) {
-          Write-Host "✅ Project structure validation passed"
+          Write-Host "Project structure validation passed"
         } else {
-          Write-Host "❌ Project structure validation failed"
+          Write-Host "Project structure validation failed"
           exit 1
         }
       shell: powershell
 
     - name: Validate Inno Setup script
       run: |
-        Write-Host "🔍 Validating Inno Setup configuration..."
+        Write-Host "Validating Inno Setup configuration..."
 
         $issFile = "autoFilterWheel/autoFilterWheel Setup.iss"
         $content = Get-Content $issFile -Raw
@@ -61,17 +61,17 @@ jobs:
         $allValid = $true
         foreach ($check in $checks.GetEnumerator()) {
           if ($content -match [regex]::Escape($check.Key)) {
-            Write-Host "✓ $($check.Key) - Found ($($check.Value))"
+            Write-Host "OK $($check.Key) - Found ($($check.Value))"
           } else {
-            Write-Host "✗ $($check.Key) - Missing or incorrect"
+            Write-Host "ERROR $($check.Key) - Missing or incorrect"
             $allValid = $false
           }
         }
 
         if ($allValid) {
-          Write-Host "✅ Inno Setup script validation passed"
+          Write-Host "Inno Setup script validation passed"
         } else {
-          Write-Host "❌ Inno Setup script validation failed"
+          Write-Host "Inno Setup script validation failed"
           exit 1
         }
       shell: powershell
