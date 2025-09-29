@@ -93,6 +93,12 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
         private void CmdCancel_Click(object sender, EventArgs e) // Cancel button event handler
         {
+            // Disconnect if connected
+            if (serialComm != null && serialComm.IsConnected)
+            {
+                serialComm.Disconnect();
+            }
+
             Close();
         }
 
