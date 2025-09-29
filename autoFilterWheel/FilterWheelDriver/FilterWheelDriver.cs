@@ -1,11 +1,10 @@
-// TODO fill in this information for your driver, then remove this line!
 //
 // ASCOM FilterWheel driver for autoFilterWheel
 //
-// Description:	 <To be completed by driver developer>
+// Description:	 ASCOM FilterWheel driver for ESP32-C3 based filter wheel hardware
 //
-// Implements:	ASCOM FilterWheel interface version: <To be completed by driver developer>
-// Author:		(XXX) Your N. Here <your@email.here>
+// Implements:	ASCOM FilterWheel interface version: IFilterWheelV3
+// Author:		Juan José
 //
 
 using System;
@@ -19,23 +18,16 @@ using ASCOM.Utilities;
 
 namespace ASCOM.autoFilterWheel.FilterWheel
 {
-    //
-    // This code is mostly a presentation layer for the functionality in the FilterWheelHardware class. You should not need to change the contents of this file very much, if at all.
-    // Most customisation will be in the FilterWheelHardware class, which is shared by all instances of the driver, and which must handle all aspects of communicating with your device.
-    //
-    // Your driver's DeviceID is ASCOM.autoFilterWheel.FilterWheel
-    //
-    // The COM Guid attribute sets the CLSID for ASCOM.autoFilterWheel.FilterWheel
-    // The COM ClassInterface/None attribute prevents an empty interface called _autoFilterWheel from being created and used as the [default] interface
-    //
+    // ASCOM FilterWheel driver for ESP32-C3 based filter wheel hardware
+    // DeviceID: ASCOM.autoFilterWheel.FilterWheel
 
     /// <summary>
-    /// ASCOM FilterWheel Driver for autoFilterWheel.
+    /// autoFilterWheel ASCOM FilterWheel Driver.
     /// </summary>
     [ComVisible(true)]
     [Guid("e9752f76-629c-4e84-a248-3262f3da0e1d")]
     [ProgId("ASCOM.autoFilterWheel.FilterWheel")]
-    [ServedClassName("ASCOM FilterWheel Driver for autoFilterWheel")] // Driver description that appears in the Chooser, customise as required
+    [ServedClassName("autoFilterWheel")] // Driver description that appears in the Chooser, customise as required
     [ClassInterface(ClassInterfaceType.None)]
     public class FilterWheel : ReferenceCountedObjectBase, IFilterWheelV3, IDisposable
     {
@@ -50,7 +42,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         #region Initialisation and Dispose
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="juanjolMotoFilterWheel"/> class. Must be public to successfully register for COM.
+        /// Initializes a new instance of the <see cref="juanjolautoFilterWheel"/> class. Must be public to successfully register for COM.
         /// </summary>
         public FilterWheel()
         {
@@ -68,7 +60,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 // By default all driver logging will appear in Hardware log file
                 // If you would like each instance of the driver to have its own log file as well, uncomment the lines below
 
-                tl = new TraceLogger("", "juanjolMotoFilterWheel.Driver"); // Remove the leading ASCOM. from the ProgId because this will be added back by TraceLogger.
+                tl = new TraceLogger("", "juanjolautoFilterWheel.Driver"); // Remove the leading ASCOM. from the ProgId because this will be added back by TraceLogger.
                 SetTraceState();
 
                 // Initialise the hardware if required
@@ -85,7 +77,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             catch (Exception ex)
             {
                 LogMessage("FilterWheel", $"Initialisation exception: {ex}");
-                MessageBox.Show($"{ex.Message}", "Exception creating ASCOM.juanjolMotoFilterWheel.FilterWheel", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"{ex.Message}", "Exception creating ASCOM.juanjolautoFilterWheel.FilterWheel", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

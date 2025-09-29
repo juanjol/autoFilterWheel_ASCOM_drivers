@@ -49,7 +49,7 @@ namespace ASCOM.LocalServer
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "frmMain";
-            this.Text = "ASCOM.juanjolMotoFilterWheel.FilterWheel Driver Server";
+            this.Text = "ASCOM.juanjolautoFilterWheel.FilterWheel Driver Server";
             this.ResumeLayout(false);
 
         }

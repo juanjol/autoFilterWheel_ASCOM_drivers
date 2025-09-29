@@ -1,5 +1,5 @@
 //
-// ASCOM.juanjolMotoFilterWheel.FilterWheel Local COM Server
+// ASCOM.juanjolautoFilterWheel.FilterWheel Local COM Server
 //
 // This is the core of a managed COM Local Server, capable of serving
 // multiple instances of multiple interfaces, within a single
@@ -56,7 +56,7 @@ namespace ASCOM.LocalServer
         static void Main(string[] args)
         {
             // Create a trace logger for the local server.
-            TL = new TraceLogger("", "juanjolMotoFilterWheel.LocalServer")
+            TL = new TraceLogger("", "juanjolautoFilterWheel.LocalServer")
             {
                 Enabled = true // Enable to debug local server operation (not usually required). Drivers have their own independent trace loggers.
             };
@@ -75,7 +75,7 @@ namespace ASCOM.LocalServer
             driversInUseCount = 0;
             serverLockCount = 0;
             mainThreadId = GetCurrentThreadId();
-            Thread.CurrentThread.Name = "juanjolMotoFilterWheel Local Server Thread";
+            Thread.CurrentThread.Name = "juanjolautoFilterWheel Local Server Thread";
 
             // Create and configure the local server host form that runs the Windows message loop required to support driver operation
             TL.LogMessage("Main", $"Creating host form");
@@ -324,7 +324,7 @@ namespace ASCOM.LocalServer
             catch (Exception e)
             {
                 TL.LogMessageCrLf("PopulateListOfAscomDrivers", $"Exception: {e}");
-                MessageBox.Show($"Failed to load served COM class assembly from within this local server - {e.Message}", "Rotator Simulator", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                MessageBox.Show($"Failed to load served COM class assembly from within this local server - {e.Message}", "autoFilterWheel", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                 return false;
             }
 
@@ -385,7 +385,7 @@ namespace ASCOM.LocalServer
             catch (Exception ex)
             {
                 TL.LogMessageCrLf("RegisterObjects", $"Setting AppID exception: {ex}");
-                MessageBox.Show("Error while registering the server:\n" + ex.ToString(), "ASCOM.juanjolMotoFilterWheel.FilterWheel", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                MessageBox.Show("Error while registering the server:\n" + ex.ToString(), "ASCOM.juanjolautoFilterWheel.FilterWheel", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                 return;
             }
 
@@ -447,7 +447,7 @@ namespace ASCOM.LocalServer
                 catch (Exception ex)
                 {
                     TL.LogMessageCrLf("RegisterObjects", $"Driver registration exception: {ex}");
-                    MessageBox.Show("Error while registering the server:\n" + ex.ToString(), "ASCOM.juanjolMotoFilterWheel.FilterWheel", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                    MessageBox.Show("Error while registering the server:\n" + ex.ToString(), "ASCOM.juanjolautoFilterWheel.FilterWheel", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                     bFail = true;
                 }
 
@@ -545,13 +545,13 @@ namespace ASCOM.LocalServer
             }
             catch (System.ComponentModel.Win32Exception)
             {
-                TL.LogMessage("IsAdministrator", $"The ASCOM.juanjolMotoFilterWheel.FilterWheel was not " + (argument == "/register" ? "registered" : "unregistered because you did not allow it."));
-                MessageBox.Show("The ASCOM.juanjolMotoFilterWheel.FilterWheel was not " + (argument == "/register" ? "registered" : "unregistered because you did not allow it.", "ASCOM.juanjolMotoFilterWheel.FilterWheel", MessageBoxButtons.OK, MessageBoxIcon.Warning));
+                TL.LogMessage("IsAdministrator", $"The ASCOM.juanjolautoFilterWheel.FilterWheel was not " + (argument == "/register" ? "registered" : "unregistered because you did not allow it."));
+                MessageBox.Show("The ASCOM.juanjolautoFilterWheel.FilterWheel was not " + (argument == "/register" ? "registered" : "unregistered because you did not allow it.", "ASCOM.juanjolautoFilterWheel.FilterWheel", MessageBoxButtons.OK, MessageBoxIcon.Warning));
             }
             catch (Exception ex)
             {
                 TL.LogMessageCrLf("IsAdministrator", $"Exception: {ex}");
-                MessageBox.Show(ex.ToString(), "ASCOM.juanjolMotoFilterWheel.FilterWheel", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                MessageBox.Show(ex.ToString(), "ASCOM.juanjolautoFilterWheel.FilterWheel", MessageBoxButtons.OK, MessageBoxIcon.Stop);
             }
             return;
         }
@@ -579,7 +579,7 @@ namespace ASCOM.LocalServer
                 if (!factory.RegisterClassObject())
                 {
                     TL.LogMessage("RegisterClassFactories", $"  Failed to register class factory for " + driverType.Name);
-                    MessageBox.Show("Failed to register class factory for " + driverType.Name, "ASCOM.juanjolMotoFilterWheel.FilterWheel", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                    MessageBox.Show("Failed to register class factory for " + driverType.Name, "ASCOM.juanjolautoFilterWheel.FilterWheel", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                     return false;
                 }
                 TL.LogMessage("RegisterClassFactories", $"  Registered class factory OK for: {driverType.Name}");
@@ -649,7 +649,7 @@ namespace ASCOM.LocalServer
 
                     default:
                         TL.LogMessage("ProcessArguments", $"Unknown argument: {args[0]}");
-                        MessageBox.Show("Unknown argument: " + args[0] + "\nValid are : -register, -unregister and -embedding", "ASCOM.juanjolMotoFilterWheel.FilterWheel", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        MessageBox.Show("Unknown argument: " + args[0] + "\nValid are : -register, -unregister and -embedding", "ASCOM.juanjolautoFilterWheel.FilterWheel", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                         break;
                 }
             }
