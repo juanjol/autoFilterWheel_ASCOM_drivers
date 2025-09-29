@@ -17,7 +17,7 @@ DefaultDirName="{cf}\ASCOM\FilterWheel"
 DisableDirPage=yes
 DisableProgramGroupPage=yes
 OutputDir="."
-OutputBaseFilename="autoFilterWheel Setup"
+OutputBaseFilename="autoFilterWheelSetup"
 Compression=lzma
 SolidCompression=yes
 ; Relative paths for GitHub Actions compatibility
