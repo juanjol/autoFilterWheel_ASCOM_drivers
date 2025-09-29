@@ -1,0 +1,56 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET Framework
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Restore NuGet packages
+      run: nuget restore autoFilterWheel.sln
+
+    - name: Build solution (Debug)
+      run: msbuild autoFilterWheel.sln /p:Configuration=Debug /p:Platform="Any CPU"
+
+    - name: Build solution (Release)
+      run: msbuild autoFilterWheel.sln /p:Configuration=Release /p:Platform="Any CPU"
+
+    - name: Verify build outputs
+      run: |
+        Write-Host "=== Debug Build Output ==="
+        if (Test-Path "autoFilterWheel\bin\Debug\ASCOM.autoFilterWheel.exe") {
+          Write-Host "✓ Debug build successful"
+          Get-Item "autoFilterWheel\bin\Debug\ASCOM.autoFilterWheel.exe" | Format-Table Name, Length, LastWriteTime
+        } else {
+          Write-Host "✗ Debug build failed"
+          exit 1
+        }
+
+        Write-Host "=== Release Build Output ==="
+        if (Test-Path "autoFilterWheel\bin\Release\ASCOM.autoFilterWheel.exe") {
+          Write-Host "✓ Release build successful"
+          Get-Item "autoFilterWheel\bin\Release\ASCOM.autoFilterWheel.exe" | Format-Table Name, Length, LastWriteTime
+        } else {
+          Write-Host "✗ Release build failed"
+          exit 1
+        }
+      shell: powershell
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-outputs
+        path: |
+          autoFilterWheel/bin/Release/ASCOM.autoFilterWheel.exe
+          autoFilterWheel/bin/Debug/ASCOM.autoFilterWheel.exe
