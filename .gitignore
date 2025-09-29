@@ -354,3 +354,7 @@ FodyWeavers.xsd
 # Claude Code files
 .claude/
 CLAUDE.md
+
+# Generated installers
+*.exe
+!*Test*.exe

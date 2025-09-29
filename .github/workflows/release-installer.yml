@@ -1,0 +1,68 @@
+name: Build Release Installer
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  build-installer:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET Framework
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Restore NuGet packages
+      run: nuget restore autoFilterWheel.sln
+
+    - name: Build solution
+      run: msbuild autoFilterWheel.sln /p:Configuration=Release /p:Platform="Any CPU"
+
+    - name: Verify build output
+      run: |
+        if (Test-Path "autoFilterWheel\bin\Release\ASCOM.autoFilterWheel.exe") {
+          Write-Host "✓ Build output found: ASCOM.autoFilterWheel.exe"
+          Get-ChildItem "autoFilterWheel\bin\Release\" | Format-Table Name, Length, LastWriteTime
+        } else {
+          Write-Host "✗ Build output not found!"
+          Get-ChildItem "autoFilterWheel\bin\" -Recurse | Format-Table FullName, Length
+          exit 1
+        }
+      shell: powershell
+
+    - name: Build installer with Inno Setup
+      uses: Minionguyjpro/Inno-Setup-Action@v1.2.4
+      with:
+        path: autoFilterWheel/autoFilterWheel Setup.iss
+        options: /O"autoFilterWheel"
+
+    - name: Verify installer creation
+      run: |
+        if (Test-Path "autoFilterWheel\autoFilterWheel Setup.exe") {
+          Write-Host "✓ Installer created successfully"
+          Get-Item "autoFilterWheel\autoFilterWheel Setup.exe" | Format-Table Name, Length, LastWriteTime
+        } else {
+          Write-Host "✗ Installer not found!"
+          Get-ChildItem "autoFilterWheel\" -Filter "*.exe" | Format-Table FullName
+          exit 1
+        }
+      shell: powershell
+
+    - name: Upload installer to release
+      if: github.event_name == 'release'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: autoFilterWheel/autoFilterWheel Setup.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload installer as artifact (manual trigger)
+      if: github.event_name == 'workflow_dispatch'
+      uses: actions/upload-artifact@v4
+      with:
+        name: autoFilterWheel-installer
+        path: autoFilterWheel/autoFilterWheel Setup.exe
