@@ -15,12 +15,8 @@ using ASCOM.Utilities;
 namespace ASCOM.LocalServer
 {
     /// <summary>
-    /// Add and manage resources that are shared by all drivers served by this local server here.
-    /// In this example it's a serial port with a shared SendMessage method an idea for locking the message and handling connecting is given.
-    /// In reality extensive changes will probably be needed. 
-    /// Multiple drivers means that several drivers connect to the same hardware device, aka a hub.
-    /// Multiple devices means that there are more than one instance of the hardware, such as two focusers. In this case there needs to be multiple instances
-    /// of the hardware connector, each with it's own connection count.
+    /// Shared resources for all drivers served by this local server.
+    /// Contains serial port functionality that can be shared across multiple driver instances.
     /// </summary>
     [HardwareClass]
     public static class SharedResources
@@ -39,7 +35,7 @@ namespace ASCOM.LocalServer
         /// Deterministically release both managed and unmanaged resources that are used by this class.
         /// </summary>
         /// <remarks>
-        /// TODO: Release any managed or unmanaged resources that are used in this class.
+        /// Releases managed and unmanaged resources used by shared components.
         /// 
         /// Do not call this method from the FilterWheelHardware.Dispose() method in your hardware class.
         ///
@@ -100,7 +96,7 @@ namespace ASCOM.LocalServer
         }
 
         /// <summary>
-        /// Example of a shared SendMessage method
+        /// Shared SendMessage method for serial communication
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
@@ -109,7 +105,7 @@ namespace ASCOM.LocalServer
         /// </remarks>
         public static string SendMessage(string message)
         {
-            // TODO update this with your requirements
+            // Send message and wait for terminated response
             lock (lockObject)
             {
                 SharedSerial.Transmit(message);
@@ -118,7 +114,7 @@ namespace ASCOM.LocalServer
         }
 
         /// <summary>
-        /// Example of handling connecting to and disconnection from the shared serial port.
+        /// Handles connecting to and disconnection from the shared serial port.
         /// </summary>
         /// <remarks>
         /// Needs error handling, the port name etc. needs to be set up first, this could be done by the driver checking Connected and if it's false setting up the port before setting connected to true.

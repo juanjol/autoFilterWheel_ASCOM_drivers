@@ -1,11 +1,10 @@
-﻿// TODO fill in this information for your driver, then remove this line!
-//
+﻿//
 // ASCOM FilterWheel hardware class for autoFilterWheel
 //
-// Description:	 <To be completed by driver developer>
+// Description:	 Hardware interface for ESP32-C3 based filter wheel
 //
-// Implements:	ASCOM FilterWheel interface version: <To be completed by driver developer>
-// Author:		(XXX) Your N. Here <your@email.here>
+// Implements:	ASCOM FilterWheel interface version: IFilterWheelV3
+// Author:		Juan José
 //
 
 using System;
@@ -20,9 +19,7 @@ using System.Threading;
 
 namespace ASCOM.autoFilterWheel.FilterWheel
 {
-    //
-    // TODO Replace the not implemented exceptions with code to implement the function or throw the appropriate ASCOM exception.
-    //
+    // Hardware communication layer for ESP32-C3 filter wheel
 
     /// <summary>
     /// ASCOM FilterWheel hardware class for autoFilterWheel.
@@ -278,7 +275,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         /// Deterministically release both managed and unmanaged resources that are used by this class.
         /// </summary>
         /// <remarks>
-        /// TODO: Release any managed or unmanaged resources that are used in this class.
+        /// Releases managed and unmanaged resources used by this hardware class.
         /// 
         /// Do not call this method from the Dispose method in your driver class.
         ///
@@ -658,7 +655,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         {
             get
             {
-                // TODO check that the driver hardware connection exists and is connected to the hardware
+                // Return the hardware connection state (serial communication status is managed through Connect/Disconnect)
                 return connectedState;
             }
         }

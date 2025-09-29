@@ -6,13 +6,13 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 //
-// TODO - Add your authorship information here
+// Assembly information for autoFilterWheel ASCOM driver
 [assembly: AssemblyTitle("ASCOM.autoFilterWheel.FilterWheel")]
 [assembly: AssemblyDescription("ASCOM Local Server FilterWheel driver for autoFilterWheel")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("The ASCOM Initiative")]
-[assembly: AssemblyProduct("ASCOM Local Server FilterWheel driver for autoFilterWheel")]
-[assembly: AssemblyCopyright("Copyright © 2025 The ASCOM Initiative")]
+[assembly: AssemblyCompany("Juan José")]
+[assembly: AssemblyProduct("autoFilterWheel ASCOM FilterWheel Driver")]
+[assembly: AssemblyCopyright("Copyright © 2025 Juan José")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
