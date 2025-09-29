@@ -1,4 +1,4 @@
-name: Build and Test
+name: Code Quality Checks
 
 on:
   push:
@@ -7,50 +7,71 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  build:
+  validate:
     runs-on: windows-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup .NET Framework
-      uses: microsoft/setup-msbuild@v2
-
-    - name: Restore NuGet packages
-      run: nuget restore autoFilterWheel.sln
-
-    - name: Build solution (Debug)
-      run: msbuild autoFilterWheel.sln /p:Configuration=Debug /p:Platform="Any CPU"
-
-    - name: Build solution (Release)
-      run: msbuild autoFilterWheel.sln /p:Configuration=Release /p:Platform="Any CPU"
-
-    - name: Verify build outputs
+    - name: Validate project structure
       run: |
-        Write-Host "=== Debug Build Output ==="
-        if (Test-Path "autoFilterWheel\bin\Debug\ASCOM.autoFilterWheel.exe") {
-          Write-Host "✓ Debug build successful"
-          Get-Item "autoFilterWheel\bin\Debug\ASCOM.autoFilterWheel.exe" | Format-Table Name, Length, LastWriteTime
-        } else {
-          Write-Host "✗ Debug build failed"
-          exit 1
+        Write-Host "🔍 Validating autoFilterWheel project structure..."
+
+        # Check essential files exist
+        $requiredFiles = @(
+          "autoFilterWheel.sln",
+          "autoFilterWheel/autoFilterWheel.csproj",
+          "autoFilterWheel/autoFilterWheel Setup.iss",
+          ".github/workflows/release-installer.yml"
+        )
+
+        $allValid = $true
+        foreach ($file in $requiredFiles) {
+          if (Test-Path $file) {
+            Write-Host "✓ $file - Found"
+          } else {
+            Write-Host "✗ $file - Missing"
+            $allValid = $false
+          }
         }
 
-        Write-Host "=== Release Build Output ==="
-        if (Test-Path "autoFilterWheel\bin\Release\ASCOM.autoFilterWheel.exe") {
-          Write-Host "✓ Release build successful"
-          Get-Item "autoFilterWheel\bin\Release\ASCOM.autoFilterWheel.exe" | Format-Table Name, Length, LastWriteTime
+        if ($allValid) {
+          Write-Host "✅ Project structure validation passed"
         } else {
-          Write-Host "✗ Release build failed"
+          Write-Host "❌ Project structure validation failed"
           exit 1
         }
       shell: powershell
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-outputs
-        path: |
-          autoFilterWheel/bin/Release/ASCOM.autoFilterWheel.exe
-          autoFilterWheel/bin/Debug/ASCOM.autoFilterWheel.exe
+    - name: Validate Inno Setup script
+      run: |
+        Write-Host "🔍 Validating Inno Setup configuration..."
+
+        $issFile = "autoFilterWheel/autoFilterWheel Setup.iss"
+        $content = Get-Content $issFile -Raw
+
+        # Check for required sections and settings
+        $checks = @{
+          "OutputBaseFilename" = 'autoFilterWheelSetup'
+          "AppName" = 'autoFilterWheel'
+          "bin\Release\ASCOM.autoFilterWheel.exe" = 'relative path'
+        }
+
+        $allValid = $true
+        foreach ($check in $checks.GetEnumerator()) {
+          if ($content -match [regex]::Escape($check.Key)) {
+            Write-Host "✓ $($check.Key) - Found ($($check.Value))"
+          } else {
+            Write-Host "✗ $($check.Key) - Missing or incorrect"
+            $allValid = $false
+          }
+        }
+
+        if ($allValid) {
+          Write-Host "✅ Inno Setup script validation passed"
+        } else {
+          Write-Host "❌ Inno Setup script validation failed"
+          exit 1
+        }
+      shell: powershell

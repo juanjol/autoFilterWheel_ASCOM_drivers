@@ -140,7 +140,7 @@ var
 begin
    P := CreateOleObject('ASCOM.Utilities.Profile');
    P.DeviceType := 'FilterWheel';
-   P.Register('autoFilterWheel.FilterWheel', 'autoFilterWheel Ascom driver');
+   P.Register('ASCOM.autoFilterWheel.FilterWheel', 'autoFilterWheel Ascom driver');
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
@@ -151,6 +151,6 @@ begin
    begin
      P := CreateOleObject('ASCOM.Utilities.Profile');
      P.DeviceType := 'FilterWheel';
-     P.Unregister('autoFilterWheel.FilterWheel');
+     P.Unregister('ASCOM.autoFilterWheel.FilterWheel');
   end;
 end;

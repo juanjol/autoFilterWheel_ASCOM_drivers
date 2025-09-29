@@ -1,68 +1,102 @@
-name: Build Release Installer
+name: Generate Installer from Uploaded Driver
 
 on:
   release:
     types: [published]
-  workflow_dispatch: # Allows manual triggering
 
 jobs:
-  build-installer:
+  generate-installer:
     runs-on: windows-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup .NET Framework
-      uses: microsoft/setup-msbuild@v2
-
-    - name: Restore NuGet packages
-      run: nuget restore autoFilterWheel.sln
-
-    - name: Build solution
-      run: msbuild autoFilterWheel.sln /p:Configuration=Release /p:Platform="Any CPU"
-
-    - name: Verify build output
+    - name: Check for uploaded driver
+      id: check-driver
       run: |
-        if (Test-Path "autoFilterWheel\bin\Release\ASCOM.autoFilterWheel.exe") {
-          Write-Host "✓ Build output found: ASCOM.autoFilterWheel.exe"
-          Get-ChildItem "autoFilterWheel\bin\Release\" | Format-Table Name, Length, LastWriteTime
+        echo "Checking for uploaded driver..."
+
+        # Get release info
+        $releaseId = "${{ github.event.release.id }}"
+        $repo = "${{ github.repository }}"
+
+        # Get release assets
+        $assets = gh api repos/$repo/releases/$releaseId/assets --jq '.[].name' | Out-String
+
+        if ($assets -match "ASCOM\.autoFilterWheel\.exe") {
+          Write-Host "Driver executable found in release assets"
+          echo "driver-found=true" >> $env:GITHUB_OUTPUT
         } else {
-          Write-Host "✗ Build output not found!"
-          Get-ChildItem "autoFilterWheel\bin\" -Recurse | Format-Table FullName, Length
+          Write-Host "Driver executable not found!"
+          Write-Host "Please upload ASCOM.autoFilterWheel.exe to the release first."
+          Write-Host "Available assets:"
+          Write-Host $assets
+          echo "driver-found=false" >> $env:GITHUB_OUTPUT
           exit 1
         }
       shell: powershell
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build installer with Inno Setup
+    - name: Download driver from release
+      if: steps.check-driver.outputs.driver-found == 'true'
+      run: |
+        echo "Downloading driver from release..."
+
+        $releaseId = "${{ github.event.release.id }}"
+        $repo = "${{ github.repository }}"
+
+        # Get the download URL for the driver
+        $assetUrl = gh api repos/$repo/releases/$releaseId/assets --jq '.[] | select(.name=="ASCOM.autoFilterWheel.exe") | .browser_download_url'
+
+        # Create directory structure
+        New-Item -ItemType Directory -Path "autoFilterWheel\bin\Release" -Force
+
+        # Download the driver
+        Invoke-WebRequest -Uri $assetUrl -OutFile "autoFilterWheel\bin\Release\ASCOM.autoFilterWheel.exe"
+
+        # Verify download
+        if (Test-Path "autoFilterWheel\bin\Release\ASCOM.autoFilterWheel.exe") {
+          Write-Host "Driver downloaded successfully"
+          Get-Item "autoFilterWheel\bin\Release\ASCOM.autoFilterWheel.exe" | Format-Table Name, Length
+        } else {
+          Write-Host "Driver download failed"
+          exit 1
+        }
+      shell: powershell
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Generate installer with Inno Setup
+      if: steps.check-driver.outputs.driver-found == 'true'
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.4
       with:
         path: autoFilterWheel/autoFilterWheel Setup.iss
         options: /O"autoFilterWheel"
 
     - name: Verify installer creation
+      if: steps.check-driver.outputs.driver-found == 'true'
       run: |
         if (Test-Path "autoFilterWheel\autoFilterWheelSetup.exe") {
-          Write-Host "✓ Installer created successfully"
+          Write-Host "Installer created successfully"
           Get-Item "autoFilterWheel\autoFilterWheelSetup.exe" | Format-Table Name, Length, LastWriteTime
         } else {
-          Write-Host "✗ Installer not found!"
+          Write-Host "Installer not found!"
           Get-ChildItem "autoFilterWheel\" -Filter "*.exe" | Format-Table FullName
           exit 1
         }
       shell: powershell
 
     - name: Upload installer to release
-      if: github.event_name == 'release'
+      if: steps.check-driver.outputs.driver-found == 'true'
       uses: softprops/action-gh-release@v1
       with:
         files: autoFilterWheel/autoFilterWheelSetup.exe
+        append_body: true
+        body: |
+
+          ## Generated Installer
+          - `autoFilterWheelSetup.exe` - Automated installer generated from uploaded driver
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Upload installer as artifact (manual trigger)
-      if: github.event_name == 'workflow_dispatch'
-      uses: actions/upload-artifact@v4
-      with:
-        name: autoFilterWheel-installer
-        path: autoFilterWheel/autoFilterWheelSetup.exe
