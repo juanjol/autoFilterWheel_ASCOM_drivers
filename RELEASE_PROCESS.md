@@ -2,66 +2,65 @@
 
 This document describes how to create releases for the autoFilterWheel ASCOM driver.
 
-## Automatic Installer Generation
+## Automated Installer Generation
 
-The project is configured to automatically build and distribute installers through GitHub Actions.
+This project uses an **upload driver + auto-generate installer** approach that automatically creates the setup from your compiled driver.
 
-### How it works
+### How It Works
 
-1. **Build and Test**: Every push to `main` or `develop` branches triggers a build test to ensure the code compiles correctly.
+✅ **Build locally** with full ASCOM Platform access
+✅ **Upload only the driver executable** to GitHub releases
+✅ **Automatic installer generation** via GitHub Actions
+✅ **Clean repository** - no binary files committed to git
 
-2. **Release Creation**: When you create a new release on GitHub, the system automatically:
-   - Builds the solution in Release configuration
-   - Generates an Inno Setup installer
-   - Attaches the installer to the release
+### Step-by-Step Process
 
-### Creating a Release
+#### 1. Prepare for Release
+```bash
+# Ensure you're on the main branch with latest changes
+git checkout main
+git pull origin main
 
-1. **Prepare the code**:
-   - Ensure all changes are committed and pushed to `main` branch
-   - Update version numbers in `AssemblyInfo.cs` if needed
-   - Test the build locally
-
-2. **Create a GitHub Release**:
-   - Go to the [Releases page](../../releases) on GitHub
-   - Click "Create a new release"
-   - Create a new tag (e.g., `v1.0.0`, `v1.1.0`)
-   - Set the target branch to `main`
-   - Fill in release title and description
-   - Click "Publish release"
-
-3. **Automatic Process**:
-   - GitHub Actions will automatically trigger
-   - The system will build the solution
-   - Generate `autoFilterWheel Setup.exe` installer
-   - Attach the installer to the release
-
-### Manual Build Trigger
-
-You can also manually trigger the installer build without creating a release:
-
-1. Go to the [Actions tab](../../actions)
-2. Select "Build Release Installer"
-3. Click "Run workflow"
-4. The installer will be available as a downloadable artifact
-
-### Files Structure
-
-```
-autoFilterWheel/
-├── autoFilterWheel Setup.iss       # Inno Setup script
-├── bin/Release/
-│   └── ASCOM.autoFilterWheel.exe   # Built driver executable
-├── ReadMe.htm                       # Driver documentation
-└── .github/workflows/
-    ├── release-installer.yml        # Release automation
-    └── build-test.yml               # Build testing
+# Update version numbers if needed in:
+# - autoFilterWheel/Properties/AssemblyInfo.cs
+# - autoFilterWheel Setup.iss (AppVersion)
 ```
 
-### Installer Features
+#### 2. Build Locally
+```bash
+# Build the solution in Release mode
+msbuild autoFilterWheel.sln /p:Configuration=Release /p:Platform="Any CPU"
 
-The generated installer includes:
-- ✅ ASCOM driver registration
+# Verify the build output exists
+# Should create: autoFilterWheel/bin/Release/ASCOM.autoFilterWheel.exe
+```
+
+#### 3. Create GitHub Release
+```bash
+# Create and push a tag
+git tag v1.0.1
+git push origin v1.0.1
+
+# Or create release directly on GitHub web interface
+```
+
+#### 4. Upload Driver Executable
+- Go to the release page on GitHub
+- Click "Edit release"
+- Drag and drop **only** `ASCOM.autoFilterWheel.exe` to attach it as a release asset
+- Click "Publish release"
+
+#### 5. Automatic Installer Generation
+- GitHub Actions will automatically detect the uploaded driver
+- It downloads the driver executable from the release
+- Generates the installer using Inno Setup
+- Uploads `autoFilterWheelSetup.exe` back to the same release
+- Adds a note about the generated installer to the release description
+
+### What Gets Generated
+
+The automated process creates:
+- ✅ `autoFilterWheelSetup.exe` - Complete installer with ASCOM registration
 - ✅ Automatic uninstall of previous versions
 - ✅ ASCOM Platform version validation (6.2+)
 - ✅ DCOM configuration for TheSky compatibility
@@ -69,11 +68,27 @@ The generated installer includes:
 
 ### Troubleshooting
 
-**Build fails**: Check that all dependencies are correctly referenced in the project file.
+#### Build Fails Locally
+- Ensure ASCOM Platform 6.6+ is installed on your machine
+- Check that all NuGet packages are restored
+- Verify .NET Framework 4.7.2 is available
+- Run `msbuild autoFilterWheel.sln /p:Configuration=Release` to see detailed errors
 
-**Installer not generated**: Verify that the Inno Setup script paths are correct and the build output exists.
+#### GitHub Actions Fails
+- **Driver not found**: Make sure you uploaded `ASCOM.autoFilterWheel.exe` (exact filename)
+- **Installer generation fails**: Check the Actions log for Inno Setup errors
+- **Upload fails**: Verify the workflow has proper GitHub token permissions
 
-**Registration issues**: Ensure the CLSID and ProgID in the installer match those in the driver code.
+#### Wrong File Uploaded
+If you uploaded the wrong file:
+1. Go to the release page
+2. Delete the incorrect asset
+3. Upload the correct `ASCOM.autoFilterWheel.exe` file
+4. The workflow will automatically retry
+
+#### Multiple Drivers
+- Only upload `ASCOM.autoFilterWheel.exe` - don't upload dependencies
+- The installer script handles all required files and registration
 
 ### Version Information
 
