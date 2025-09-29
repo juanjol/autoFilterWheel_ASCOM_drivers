@@ -10,9 +10,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("ASCOM.autoFilterWheel.FilterWheel")]
 [assembly: AssemblyDescription("ASCOM Local Server FilterWheel driver for autoFilterWheel")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Juan José")]
+[assembly: AssemblyCompany("Juanjo López")]
 [assembly: AssemblyProduct("autoFilterWheel ASCOM FilterWheel Driver")]
-[assembly: AssemblyCopyright("Copyright © 2025 Juan José")]
+[assembly: AssemblyCopyright("Copyright © 2025 Juanjo López")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

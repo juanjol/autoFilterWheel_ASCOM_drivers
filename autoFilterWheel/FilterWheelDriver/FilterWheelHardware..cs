@@ -4,7 +4,7 @@
 // Description:	 Hardware interface for ESP32-C3 based filter wheel
 //
 // Implements:	ASCOM FilterWheel interface version: IFilterWheelV3
-// Author:		Juan José
+// Author:		Juanjo López
 //
 
 using System;
