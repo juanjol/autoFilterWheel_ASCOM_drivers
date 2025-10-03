@@ -5,10 +5,10 @@
 [Setup]
 AppID={{a712827f-ae52-4a47-bedd-fb3735efc64f}
 AppName=ASCOM autoFilterWheel FilterWheel Driver
-AppVerName=ASCOM autoFilterWheel FilterWheel Driver v0.0.1
-AppVersion=v0.0.1
-AppPublisher=Juanjo López <juanjo.lopez@gmail.com>
-AppPublisherURL=mailto:juanjo.lopez@gmail.com
+AppVerName=ASCOM autoFilterWheel FilterWheel Driver v1.0.0
+AppVersion=v1.0.0
+AppPublisher=Juanjo López
+AppPublisherURL=https://github.com/juanjol
 AppSupportURL=https://ascomtalk.groups.io/g/Help
 AppUpdatesURL=https://ascom-standards.org/
 VersionInfoVersion=1.0.0
@@ -16,8 +16,8 @@ MinVersion=6.1.7601
 DefaultDirName="{cf}\ASCOM\FilterWheel"
 DisableDirPage=yes
 DisableProgramGroupPage=yes
-OutputDir="."
-OutputBaseFilename="autoFilterWheelSetup"
+OutputDir="./dist/"
+OutputBaseFilename="autoFilterWheelSetup-v1.0.0"
 Compression=lzma
 SolidCompression=yes
 ; Relative paths for GitHub Actions compatibility
@@ -42,8 +42,6 @@ Source: "ReadMe.htm"; DestDir: "{app}"; Flags: isreadme
 ;Only if COM Local Server
 [Run]
 Filename: "{app}\ASCOM.autoFilterWheel.exe"; Parameters: "/regserver"
-
-
 
 
 ;Only if COM Local Server

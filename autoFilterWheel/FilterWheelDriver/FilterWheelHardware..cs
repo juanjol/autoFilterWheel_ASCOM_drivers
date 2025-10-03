@@ -356,6 +356,25 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                             serialComm.Connect(comPort);
                             connectedState = true;
                             LogMessage("Connected Set", "Successfully connected to filter wheel");
+
+                            // Get filter count from device
+                            try
+                            {
+                                int deviceFilterCount = serialComm.GetFilterCount();
+                                if (deviceFilterCount >= SerialCommands.MIN_FILTER_COUNT && deviceFilterCount <= SerialCommands.MAX_FILTER_COUNT)
+                                {
+                                    filterCount = deviceFilterCount;
+                                    LogMessage("Connected Set", $"Retrieved filter count from device: {filterCount}");
+                                }
+                                else
+                                {
+                                    LogMessage("Connected Set", $"Invalid filter count from device ({deviceFilterCount}), using profile value: {filterCount}");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                LogMessage("Connected Set", $"Could not get filter count from device: {ex.Message}, using profile value: {filterCount}");
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -410,7 +429,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             get
             {
                 Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-                string driverInfo = $"ASCOM FilterWheel driver for ESP32-C3 controller. Version: {version.Major}.{version.Minor}. Supports 5-position filter wheel with serial communication. Compatible with device ID: {SerialCommands.EXPECTED_DEVICE_ID}";
+                string driverInfo = $"ASCOM FilterWheel driver for ESP32-C3 controller. Version: {version.Major}.{version.Minor}. Supports {SerialCommands.MIN_FILTER_COUNT}-{SerialCommands.MAX_FILTER_COUNT} position filter wheel with serial communication. Compatible with firmware v2.0+";
                 LogMessage("DriverInfo Get", driverInfo);
                 return driverInfo;
             }
@@ -606,11 +625,11 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 {
                     LogMessage("Position Set", value.ToString());
 
-                    // ASCOM uses 0-based indexing, Arduino uses 1-based
-                    if ((value < 0) | (value > SerialCommands.NUM_FILTERS - 1))
+                    // ASCOM uses 0-based indexing, firmware uses 1-based
+                    if ((value < 0) | (value > filterCount - 1))
                     {
-                        LogMessage("", "Throwing InvalidValueException - Position: " + value.ToString() + ", Range: 0 to " + (SerialCommands.NUM_FILTERS - 1).ToString());
-                        throw new InvalidValueException("Position", value.ToString(), "0 to " + (SerialCommands.NUM_FILTERS - 1).ToString());
+                        LogMessage("", "Throwing InvalidValueException - Position: " + value.ToString() + ", Range: 0 to " + (filterCount - 1).ToString());
+                        throw new InvalidValueException("Position", value.ToString(), "0 to " + (filterCount - 1).ToString());
                     }
 
                     try
@@ -619,13 +638,9 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                         {
                             // Convert from ASCOM 0-based to Arduino 1-based position
                             int arduinoPosition = value + 1;
-                            serialComm.MoveToPosition(arduinoPosition);
 
-                            // Wait for movement to complete
-                            if (!serialComm.WaitForMovementComplete(SerialCommands.MOVEMENT_TIMEOUT_MS))
-                            {
-                                throw new DriverException("Filter wheel movement timeout");
-                            }
+                            // MoveToPosition is blocking - it waits until movement completes
+                            serialComm.MoveToPosition(arduinoPosition);
 
                             fwPosition = value;
                         }
