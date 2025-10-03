@@ -182,6 +182,14 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         /// </summary>
         public string SendCommand(string command)
         {
+            return SendCommand(command, SerialCommands.COMMAND_TIMEOUT_MS);
+        }
+
+        /// <summary>
+        /// Send a command and wait for response with custom timeout
+        /// </summary>
+        public string SendCommand(string command, int timeoutMs)
+        {
             lock (lockObject)
             {
                 if (!IsConnected)
@@ -190,26 +198,38 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 try
                 {
                     string formattedCommand = SerialCommands.FormatCommand(command);
-                    tl.LogMessage("SerialCommunication.SendCommand", $"Sending: {formattedCommand.TrimEnd('\r', '\n')}");
+                    tl.LogMessage("SerialCommunication.SendCommand", $"Sending: {formattedCommand.TrimEnd('\r', '\n')} (timeout: {timeoutMs}ms)");
 
-                    // Clear buffers before sending
-                    serialPort.ClearBuffers();
-
-                    // Send command
-                    serialPort.Transmit(formattedCommand);
-
-                    // Read response
-                    string response = ReadResponse();
-                    tl.LogMessage("SerialCommunication.SendCommand", $"Received: {response}");
-
-                    // Check for errors
-                    if (SerialCommands.IsErrorResponse(response))
+                    // Temporarily set the timeout for this command
+                    int originalTimeout = serialPort.ReceiveTimeoutMs;
+                    try
                     {
-                        string errorMsg = SerialCommands.GetErrorMessage(response);
-                        throw new InvalidOperationException($"Device error: {errorMsg}");
-                    }
+                        serialPort.ReceiveTimeoutMs = timeoutMs;
 
-                    return response;
+                        // Clear buffers before sending
+                        serialPort.ClearBuffers();
+
+                        // Send command
+                        serialPort.Transmit(formattedCommand);
+
+                        // Read response
+                        string response = ReadResponse();
+                        tl.LogMessage("SerialCommunication.SendCommand", $"Received: {response}");
+
+                        // Check for errors
+                        if (SerialCommands.IsErrorResponse(response))
+                        {
+                            string errorMsg = SerialCommands.GetErrorMessage(response);
+                            throw new InvalidOperationException($"Device error: {errorMsg}");
+                        }
+
+                        return response;
+                    }
+                    finally
+                    {
+                        // Restore original timeout
+                        serialPort.ReceiveTimeoutMs = originalTimeout;
+                    }
                 }
                 catch (TimeoutException ex)
                 {
@@ -261,13 +281,16 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         /// <summary>
         /// Move to specified position
         /// </summary>
-        public void MoveToPosition(int position)
+        public void MoveToPosition(int position, int maxFilters = SerialCommands.MAX_FILTER_COUNT)
         {
-            if (position < 1 || position > SerialCommands.NUM_FILTERS)
-                throw new InvalidValueException($"Position must be between 1 and {SerialCommands.NUM_FILTERS}");
+            if (position < 1 || position > maxFilters)
+                throw new InvalidValueException($"Position must be between 1 and {maxFilters}");
 
             string command = SerialCommands.CMD_MOVE_POSITION + position;
-            string response = SendCommand(command);
+
+            // MP command is blocking and can take up to 20 seconds for full rotation
+            // Use extended timeout (20 seconds) per ASCOM_COMMANDS.md recommendation
+            string response = SendCommand(command, 20000);
 
             // Verify the response
             if (!response.StartsWith(SerialCommands.RESP_MOVED + position))
@@ -307,12 +330,31 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         }
 
         /// <summary>
+        /// Get filter count from device
+        /// </summary>
+        public int GetFilterCount()
+        {
+            string response = SendCommand(SerialCommands.CMD_GET_FILTERS);
+
+            // Parse response format: F[3-9]
+            if (response.StartsWith(SerialCommands.RESP_FILTERS) && response.Length > 1)
+            {
+                if (int.TryParse(response.Substring(1), out int count))
+                {
+                    return count;
+                }
+            }
+
+            throw new FormatException($"Invalid filter count response: {response}");
+        }
+
+        /// <summary>
         /// Get filter name for a position
         /// </summary>
-        public string GetFilterName(int position)
+        public string GetFilterName(int position, int maxFilters = SerialCommands.MAX_FILTER_COUNT)
         {
-            if (position < 1 || position > SerialCommands.NUM_FILTERS)
-                throw new InvalidValueException($"Position must be between 1 and {SerialCommands.NUM_FILTERS}");
+            if (position < 1 || position > maxFilters)
+                throw new InvalidValueException($"Position must be between 1 and {maxFilters}");
 
             string command = SerialCommands.CMD_GET_FILTER_NAME + position;
             string response = SendCommand(command);
@@ -330,15 +372,18 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         /// <summary>
         /// Get all filter names
         /// </summary>
-        public string[] GetAllFilterNames()
+        public string[] GetAllFilterNames(int filterCount = SerialCommands.DEFAULT_FILTER_COUNT)
         {
-            string[] names = new string[SerialCommands.NUM_FILTERS];
+            if (filterCount < SerialCommands.MIN_FILTER_COUNT || filterCount > SerialCommands.MAX_FILTER_COUNT)
+                filterCount = SerialCommands.DEFAULT_FILTER_COUNT;
 
-            for (int i = 1; i <= SerialCommands.NUM_FILTERS; i++)
+            string[] names = new string[filterCount];
+
+            for (int i = 1; i <= filterCount; i++)
             {
                 try
                 {
-                    names[i - 1] = GetFilterName(i);
+                    names[i - 1] = GetFilterName(i, filterCount);
                 }
                 catch (Exception ex)
                 {
@@ -381,8 +426,8 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             if (filterNames == null)
                 throw new ArgumentNullException(nameof(filterNames));
 
-            if (filterCount < 3 || filterCount > 8)
-                throw new InvalidValueException("Filter count must be between 3 and 8");
+            if (filterCount < SerialCommands.MIN_FILTER_COUNT || filterCount > SerialCommands.MAX_FILTER_COUNT)
+                throw new InvalidValueException($"Filter count must be between {SerialCommands.MIN_FILTER_COUNT} and {SerialCommands.MAX_FILTER_COUNT}");
 
             tl.LogMessage("SerialCommunication.SendAllFilterNames", $"Sending {filterCount} filter names to device");
 

@@ -56,6 +56,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.picASCOM = new System.Windows.Forms.PictureBox();
             this.label2 = new System.Windows.Forms.Label();
             this.comboBoxComPort = new System.Windows.Forms.ComboBox();
+            this.btnRefreshPorts = new System.Windows.Forms.Button();
             this.btnSetPort = new System.Windows.Forms.Button();
             this.labelOr = new System.Windows.Forms.Label();
             this.btnConnect = new System.Windows.Forms.Button();
@@ -68,6 +69,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.panelSeparator = new System.Windows.Forms.Panel();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabPageConfiguration = new System.Windows.Forms.TabPage();
+            this.btnReloadFilterNames = new System.Windows.Forms.Button();
             this.labelFilterCount = new System.Windows.Forms.Label();
             this.comboBoxFilterCount = new System.Windows.Forms.ComboBox();
             this.labelFilterNames = new System.Windows.Forms.Label();
@@ -87,12 +89,9 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.textBoxFilter7 = new System.Windows.Forms.TextBox();
             this.labelFilter8 = new System.Windows.Forms.Label();
             this.textBoxFilter8 = new System.Windows.Forms.TextBox();
+            this.labelFilter9 = new System.Windows.Forms.Label();
+            this.textBoxFilter9 = new System.Windows.Forms.TextBox();
             this.tabPageMotorConfig = new System.Windows.Forms.TabPage();
-            this.groupBoxDirection = new System.Windows.Forms.GroupBox();
-            this.btnSetDirectionConfig = new System.Windows.Forms.Button();
-            this.checkBoxReverse = new System.Windows.Forms.CheckBox();
-            this.radioBidirectional = new System.Windows.Forms.RadioButton();
-            this.radioUnidirectional = new System.Windows.Forms.RadioButton();
             this.groupBoxMotorSettings = new System.Windows.Forms.GroupBox();
             this.btnSetStepsPerRev = new System.Windows.Forms.Button();
             this.numericStepsPerRev = new System.Windows.Forms.NumericUpDown();
@@ -108,20 +107,12 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.labelMotorSpeed = new System.Windows.Forms.Label();
             this.labelStepsPerRev = new System.Windows.Forms.Label();
             this.tabPageCalibration = new System.Windows.Forms.TabPage();
-            this.groupBoxBacklashCalibration = new System.Windows.Forms.GroupBox();
-            this.btnFinishBacklash = new System.Windows.Forms.Button();
-            this.btnBacklashMark = new System.Windows.Forms.Button();
-            this.btnBacklashStep = new System.Windows.Forms.Button();
-            this.btnStartBacklash = new System.Windows.Forms.Button();
-            this.labelBacklashSteps = new System.Windows.Forms.Label();
-            this.comboBoxBacklashSteps = new System.Windows.Forms.ComboBox();
             this.groupBoxCalibration = new System.Windows.Forms.GroupBox();
-            this.btnFinishCalibration = new System.Windows.Forms.Button();
-            this.btnCalibrationBackward = new System.Windows.Forms.Button();
-            this.btnCalibrationForward = new System.Windows.Forms.Button();
-            this.btnStartCalibration = new System.Windows.Forms.Button();
-            this.labelCalibrationSteps = new System.Windows.Forms.Label();
-            this.comboBoxCalibrationSteps = new System.Windows.Forms.ComboBox();
+            this.comboBoxBackwardSteps = new System.Windows.Forms.ComboBox();
+            this.btnMoveBackward = new System.Windows.Forms.Button();
+            this.btnSetToPos1 = new System.Windows.Forms.Button();
+            this.comboBoxForwardSteps = new System.Windows.Forms.ComboBox();
+            this.btnMoveForward = new System.Windows.Forms.Button();
             this.tabPageManualControl = new System.Windows.Forms.TabPage();
             this.groupBoxStepping = new System.Windows.Forms.GroupBox();
             this.btnGetCurrentStep = new System.Windows.Forms.Button();
@@ -143,7 +134,6 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.tabControl.SuspendLayout();
             this.tabPageConfiguration.SuspendLayout();
             this.tabPageMotorConfig.SuspendLayout();
-            this.groupBoxDirection.SuspendLayout();
             this.groupBoxMotorSettings.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericStepsPerRev)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericDisableDelay)).BeginInit();
@@ -151,9 +141,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             ((System.ComponentModel.ISupportInitialize)(this.numericMaxSpeed)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericMotorSpeed)).BeginInit();
             this.tabPageCalibration.SuspendLayout();
-            this.groupBoxBacklashCalibration.SuspendLayout();
             this.groupBoxCalibration.SuspendLayout();
-            this.tabPageManualControl.SuspendLayout();
             this.groupBoxStepping.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericStepAmount)).BeginInit();
             this.tabPageDisplay.SuspendLayout();
@@ -213,31 +201,44 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.comboBoxComPort.FormattingEnabled = true;
             this.comboBoxComPort.Location = new System.Drawing.Point(76, 9);
             this.comboBoxComPort.Name = "comboBoxComPort";
-            this.comboBoxComPort.Size = new System.Drawing.Size(104, 21);
+            this.comboBoxComPort.Size = new System.Drawing.Size(80, 21);
             this.comboBoxComPort.TabIndex = 7;
-            //
+            // 
+            // btnRefreshPorts
+            // 
+            this.btnRefreshPorts.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnRefreshPorts.Location = new System.Drawing.Point(162, 8);
+            this.btnRefreshPorts.Margin = new System.Windows.Forms.Padding(0);
+            this.btnRefreshPorts.Name = "btnRefreshPorts";
+            this.btnRefreshPorts.Size = new System.Drawing.Size(25, 24);
+            this.btnRefreshPorts.TabIndex = 8;
+            this.btnRefreshPorts.Text = "↻";
+            this.btnRefreshPorts.UseVisualStyleBackColor = true;
+            this.btnRefreshPorts.Click += new System.EventHandler(this.BtnRefreshPorts_Click);
+            // 
             // btnSetPort
-            //
-            this.btnSetPort.Location = new System.Drawing.Point(189, 9);
+            // 
+            this.btnSetPort.Location = new System.Drawing.Point(193, 9);
             this.btnSetPort.Name = "btnSetPort";
-            this.btnSetPort.Size = new System.Drawing.Size(60, 23);
-            this.btnSetPort.TabIndex = 8;
-            this.btnSetPort.Text = "Set port";
+            this.btnSetPort.Size = new System.Drawing.Size(90, 23);
+            this.btnSetPort.TabIndex = 9;
+            this.btnSetPort.Text = "Set port && close";
             this.btnSetPort.UseVisualStyleBackColor = true;
-            //
+            this.btnSetPort.Click += new System.EventHandler(this.BtnSetPort_Click);
+            // 
             // labelOr
-            //
+            // 
             this.labelOr.AutoSize = true;
             this.labelOr.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.labelOr.Location = new System.Drawing.Point(255, 14);
+            this.labelOr.Location = new System.Drawing.Point(289, 14);
             this.labelOr.Name = "labelOr";
-            this.labelOr.Size = new System.Drawing.Size(29, 13);
-            this.labelOr.TabIndex = 9;
+            this.labelOr.Size = new System.Drawing.Size(28, 13);
+            this.labelOr.TabIndex = 10;
             this.labelOr.Text = "- or -";
-            //
+            // 
             // btnConnect
-            //
-            this.btnConnect.Location = new System.Drawing.Point(290, 9);
+            // 
+            this.btnConnect.Location = new System.Drawing.Point(324, 9);
             this.btnConnect.Name = "btnConnect";
             this.btnConnect.Size = new System.Drawing.Size(60, 23);
             this.btnConnect.TabIndex = 6;
@@ -248,10 +249,10 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // btnDisconnect
             // 
             this.btnDisconnect.Enabled = false;
-            this.btnDisconnect.Location = new System.Drawing.Point(360, 9);
+            this.btnDisconnect.Location = new System.Drawing.Point(390, 9);
             this.btnDisconnect.Name = "btnDisconnect";
             this.btnDisconnect.Size = new System.Drawing.Size(80, 23);
-            this.btnDisconnect.TabIndex = 7;
+            this.btnDisconnect.TabIndex = 11;
             this.btnDisconnect.Text = "Disconnect";
             this.btnDisconnect.UseVisualStyleBackColor = true;
             this.btnDisconnect.Click += new System.EventHandler(this.BtnDisconnect_Click);
@@ -305,6 +306,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.btnSelectFilter.TabIndex = 42;
             this.btnSelectFilter.Text = "Select Filter";
             this.btnSelectFilter.UseVisualStyleBackColor = true;
+            this.btnSelectFilter.Click += new System.EventHandler(this.BtnSelectFilter_Click);
             // 
             // panelSeparator
             // 
@@ -315,11 +317,10 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.panelSeparator.TabIndex = 43;
             // 
             // tabControl
-            // 
+            //
             this.tabControl.Controls.Add(this.tabPageConfiguration);
             this.tabControl.Controls.Add(this.tabPageMotorConfig);
             this.tabControl.Controls.Add(this.tabPageCalibration);
-            this.tabControl.Controls.Add(this.tabPageManualControl);
             this.tabControl.Controls.Add(this.tabPageDisplay);
             this.tabControl.Controls.Add(this.tabPageLog);
             this.tabControl.Location = new System.Drawing.Point(11, 82);
@@ -330,6 +331,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // 
             // tabPageConfiguration
             // 
+            this.tabPageConfiguration.Controls.Add(this.btnReloadFilterNames);
             this.tabPageConfiguration.Controls.Add(this.labelFilterCount);
             this.tabPageConfiguration.Controls.Add(this.comboBoxFilterCount);
             this.tabPageConfiguration.Controls.Add(this.btnSet);
@@ -350,6 +352,8 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.tabPageConfiguration.Controls.Add(this.textBoxFilter7);
             this.tabPageConfiguration.Controls.Add(this.labelFilter8);
             this.tabPageConfiguration.Controls.Add(this.textBoxFilter8);
+            this.tabPageConfiguration.Controls.Add(this.labelFilter9);
+            this.tabPageConfiguration.Controls.Add(this.textBoxFilter9);
             this.tabPageConfiguration.Location = new System.Drawing.Point(4, 22);
             this.tabPageConfiguration.Name = "tabPageConfiguration";
             this.tabPageConfiguration.Padding = new System.Windows.Forms.Padding(3);
@@ -357,6 +361,17 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.tabPageConfiguration.TabIndex = 0;
             this.tabPageConfiguration.Text = "Filter Configuration";
             this.tabPageConfiguration.UseVisualStyleBackColor = true;
+            // 
+            // btnReloadFilterNames
+            // 
+            this.btnReloadFilterNames.Enabled = false;
+            this.btnReloadFilterNames.Location = new System.Drawing.Point(280, 193);
+            this.btnReloadFilterNames.Name = "btnReloadFilterNames";
+            this.btnReloadFilterNames.Size = new System.Drawing.Size(140, 25);
+            this.btnReloadFilterNames.TabIndex = 7;
+            this.btnReloadFilterNames.Text = "Reload Filter Names";
+            this.btnReloadFilterNames.UseVisualStyleBackColor = true;
+            this.btnReloadFilterNames.Click += new System.EventHandler(this.BtnReloadFilterNames_Click);
             // 
             // labelFilterCount
             // 
@@ -413,7 +428,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // labelFilter2
             // 
             this.labelFilter2.AutoSize = true;
-            this.labelFilter2.Location = new System.Drawing.Point(170, 70);
+            this.labelFilter2.Location = new System.Drawing.Point(10, 96);
             this.labelFilter2.Name = "labelFilter2";
             this.labelFilter2.Size = new System.Drawing.Size(13, 13);
             this.labelFilter2.TabIndex = 13;
@@ -421,7 +436,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // 
             // textBoxFilter2
             // 
-            this.textBoxFilter2.Location = new System.Drawing.Point(189, 67);
+            this.textBoxFilter2.Location = new System.Drawing.Point(29, 93);
             this.textBoxFilter2.MaxLength = 15;
             this.textBoxFilter2.Name = "textBoxFilter2";
             this.textBoxFilter2.Size = new System.Drawing.Size(120, 20);
@@ -430,7 +445,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // labelFilter3
             // 
             this.labelFilter3.AutoSize = true;
-            this.labelFilter3.Location = new System.Drawing.Point(10, 96);
+            this.labelFilter3.Location = new System.Drawing.Point(10, 122);
             this.labelFilter3.Name = "labelFilter3";
             this.labelFilter3.Size = new System.Drawing.Size(13, 13);
             this.labelFilter3.TabIndex = 15;
@@ -438,7 +453,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // 
             // textBoxFilter3
             // 
-            this.textBoxFilter3.Location = new System.Drawing.Point(29, 93);
+            this.textBoxFilter3.Location = new System.Drawing.Point(29, 119);
             this.textBoxFilter3.MaxLength = 15;
             this.textBoxFilter3.Name = "textBoxFilter3";
             this.textBoxFilter3.Size = new System.Drawing.Size(120, 20);
@@ -447,7 +462,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // labelFilter4
             // 
             this.labelFilter4.AutoSize = true;
-            this.labelFilter4.Location = new System.Drawing.Point(170, 96);
+            this.labelFilter4.Location = new System.Drawing.Point(200, 70);
             this.labelFilter4.Name = "labelFilter4";
             this.labelFilter4.Size = new System.Drawing.Size(13, 13);
             this.labelFilter4.TabIndex = 17;
@@ -455,7 +470,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // 
             // textBoxFilter4
             // 
-            this.textBoxFilter4.Location = new System.Drawing.Point(189, 93);
+            this.textBoxFilter4.Location = new System.Drawing.Point(219, 67);
             this.textBoxFilter4.MaxLength = 15;
             this.textBoxFilter4.Name = "textBoxFilter4";
             this.textBoxFilter4.Size = new System.Drawing.Size(120, 20);
@@ -464,7 +479,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // labelFilter5
             // 
             this.labelFilter5.AutoSize = true;
-            this.labelFilter5.Location = new System.Drawing.Point(10, 122);
+            this.labelFilter5.Location = new System.Drawing.Point(200, 96);
             this.labelFilter5.Name = "labelFilter5";
             this.labelFilter5.Size = new System.Drawing.Size(13, 13);
             this.labelFilter5.TabIndex = 19;
@@ -472,7 +487,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // 
             // textBoxFilter5
             // 
-            this.textBoxFilter5.Location = new System.Drawing.Point(29, 119);
+            this.textBoxFilter5.Location = new System.Drawing.Point(219, 93);
             this.textBoxFilter5.MaxLength = 15;
             this.textBoxFilter5.Name = "textBoxFilter5";
             this.textBoxFilter5.Size = new System.Drawing.Size(120, 20);
@@ -481,7 +496,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // labelFilter6
             // 
             this.labelFilter6.AutoSize = true;
-            this.labelFilter6.Location = new System.Drawing.Point(170, 122);
+            this.labelFilter6.Location = new System.Drawing.Point(200, 122);
             this.labelFilter6.Name = "labelFilter6";
             this.labelFilter6.Size = new System.Drawing.Size(13, 13);
             this.labelFilter6.TabIndex = 21;
@@ -489,7 +504,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // 
             // textBoxFilter6
             // 
-            this.textBoxFilter6.Location = new System.Drawing.Point(189, 119);
+            this.textBoxFilter6.Location = new System.Drawing.Point(219, 119);
             this.textBoxFilter6.MaxLength = 15;
             this.textBoxFilter6.Name = "textBoxFilter6";
             this.textBoxFilter6.Size = new System.Drawing.Size(120, 20);
@@ -498,7 +513,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // labelFilter7
             // 
             this.labelFilter7.AutoSize = true;
-            this.labelFilter7.Location = new System.Drawing.Point(10, 148);
+            this.labelFilter7.Location = new System.Drawing.Point(390, 70);
             this.labelFilter7.Name = "labelFilter7";
             this.labelFilter7.Size = new System.Drawing.Size(13, 13);
             this.labelFilter7.TabIndex = 23;
@@ -506,7 +521,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // 
             // textBoxFilter7
             // 
-            this.textBoxFilter7.Location = new System.Drawing.Point(29, 145);
+            this.textBoxFilter7.Location = new System.Drawing.Point(409, 67);
             this.textBoxFilter7.MaxLength = 15;
             this.textBoxFilter7.Name = "textBoxFilter7";
             this.textBoxFilter7.Size = new System.Drawing.Size(120, 20);
@@ -515,7 +530,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // labelFilter8
             // 
             this.labelFilter8.AutoSize = true;
-            this.labelFilter8.Location = new System.Drawing.Point(170, 148);
+            this.labelFilter8.Location = new System.Drawing.Point(390, 96);
             this.labelFilter8.Name = "labelFilter8";
             this.labelFilter8.Size = new System.Drawing.Size(13, 13);
             this.labelFilter8.TabIndex = 25;
@@ -523,15 +538,31 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // 
             // textBoxFilter8
             // 
-            this.textBoxFilter8.Location = new System.Drawing.Point(189, 145);
+            this.textBoxFilter8.Location = new System.Drawing.Point(409, 93);
             this.textBoxFilter8.MaxLength = 15;
             this.textBoxFilter8.Name = "textBoxFilter8";
             this.textBoxFilter8.Size = new System.Drawing.Size(120, 20);
             this.textBoxFilter8.TabIndex = 26;
             // 
+            // labelFilter9
+            // 
+            this.labelFilter9.AutoSize = true;
+            this.labelFilter9.Location = new System.Drawing.Point(390, 122);
+            this.labelFilter9.Name = "labelFilter9";
+            this.labelFilter9.Size = new System.Drawing.Size(13, 13);
+            this.labelFilter9.TabIndex = 27;
+            this.labelFilter9.Text = "9";
+            // 
+            // textBoxFilter9
+            // 
+            this.textBoxFilter9.Location = new System.Drawing.Point(409, 119);
+            this.textBoxFilter9.MaxLength = 15;
+            this.textBoxFilter9.Name = "textBoxFilter9";
+            this.textBoxFilter9.Size = new System.Drawing.Size(120, 20);
+            this.textBoxFilter9.TabIndex = 28;
+            // 
             // tabPageMotorConfig
             // 
-            this.tabPageMotorConfig.Controls.Add(this.groupBoxDirection);
             this.tabPageMotorConfig.Controls.Add(this.groupBoxMotorSettings);
             this.tabPageMotorConfig.Location = new System.Drawing.Point(4, 22);
             this.tabPageMotorConfig.Name = "tabPageMotorConfig";
@@ -540,61 +571,6 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.tabPageMotorConfig.TabIndex = 2;
             this.tabPageMotorConfig.Text = "Motor Configuration";
             this.tabPageMotorConfig.UseVisualStyleBackColor = true;
-            // 
-            // groupBoxDirection
-            // 
-            this.groupBoxDirection.Controls.Add(this.btnSetDirectionConfig);
-            this.groupBoxDirection.Controls.Add(this.checkBoxReverse);
-            this.groupBoxDirection.Controls.Add(this.radioBidirectional);
-            this.groupBoxDirection.Controls.Add(this.radioUnidirectional);
-            this.groupBoxDirection.Location = new System.Drawing.Point(10, 140);
-            this.groupBoxDirection.Name = "groupBoxDirection";
-            this.groupBoxDirection.Size = new System.Drawing.Size(540, 60);
-            this.groupBoxDirection.TabIndex = 1;
-            this.groupBoxDirection.TabStop = false;
-            this.groupBoxDirection.Text = "Direction Configuration";
-            // 
-            // btnSetDirectionConfig
-            // 
-            this.btnSetDirectionConfig.Enabled = false;
-            this.btnSetDirectionConfig.Location = new System.Drawing.Point(220, 20);
-            this.btnSetDirectionConfig.Name = "btnSetDirectionConfig";
-            this.btnSetDirectionConfig.Size = new System.Drawing.Size(40, 25);
-            this.btnSetDirectionConfig.TabIndex = 4;
-            this.btnSetDirectionConfig.Text = "Set";
-            this.btnSetDirectionConfig.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxReverse
-            // 
-            this.checkBoxReverse.AutoSize = true;
-            this.checkBoxReverse.Location = new System.Drawing.Point(140, 25);
-            this.checkBoxReverse.Name = "checkBoxReverse";
-            this.checkBoxReverse.Size = new System.Drawing.Size(66, 17);
-            this.checkBoxReverse.TabIndex = 2;
-            this.checkBoxReverse.Text = "Reverse";
-            this.checkBoxReverse.UseVisualStyleBackColor = true;
-            // 
-            // radioBidirectional
-            // 
-            this.radioBidirectional.AutoSize = true;
-            this.radioBidirectional.Location = new System.Drawing.Point(75, 25);
-            this.radioBidirectional.Name = "radioBidirectional";
-            this.radioBidirectional.Size = new System.Drawing.Size(50, 17);
-            this.radioBidirectional.TabIndex = 1;
-            this.radioBidirectional.Text = "Bi-Dir";
-            this.radioBidirectional.UseVisualStyleBackColor = true;
-            // 
-            // radioUnidirectional
-            // 
-            this.radioUnidirectional.AutoSize = true;
-            this.radioUnidirectional.Checked = true;
-            this.radioUnidirectional.Location = new System.Drawing.Point(10, 25);
-            this.radioUnidirectional.Name = "radioUnidirectional";
-            this.radioUnidirectional.Size = new System.Drawing.Size(57, 17);
-            this.radioUnidirectional.TabIndex = 0;
-            this.radioUnidirectional.TabStop = true;
-            this.radioUnidirectional.Text = "Uni-Dir";
-            this.radioUnidirectional.UseVisualStyleBackColor = true;
             // 
             // groupBoxMotorSettings
             // 
@@ -805,7 +781,6 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // 
             // tabPageCalibration
             // 
-            this.tabPageCalibration.Controls.Add(this.groupBoxBacklashCalibration);
             this.tabPageCalibration.Controls.Add(this.groupBoxCalibration);
             this.tabPageCalibration.Location = new System.Drawing.Point(4, 22);
             this.tabPageCalibration.Name = "tabPageCalibration";
@@ -815,175 +790,86 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.tabPageCalibration.Text = "Calibration";
             this.tabPageCalibration.UseVisualStyleBackColor = true;
             // 
-            // groupBoxBacklashCalibration
-            // 
-            this.groupBoxBacklashCalibration.Controls.Add(this.btnFinishBacklash);
-            this.groupBoxBacklashCalibration.Controls.Add(this.btnBacklashMark);
-            this.groupBoxBacklashCalibration.Controls.Add(this.btnBacklashStep);
-            this.groupBoxBacklashCalibration.Controls.Add(this.btnStartBacklash);
-            this.groupBoxBacklashCalibration.Controls.Add(this.labelBacklashSteps);
-            this.groupBoxBacklashCalibration.Controls.Add(this.comboBoxBacklashSteps);
-            this.groupBoxBacklashCalibration.Location = new System.Drawing.Point(10, 110);
-            this.groupBoxBacklashCalibration.Name = "groupBoxBacklashCalibration";
-            this.groupBoxBacklashCalibration.Size = new System.Drawing.Size(540, 90);
-            this.groupBoxBacklashCalibration.TabIndex = 31;
-            this.groupBoxBacklashCalibration.TabStop = false;
-            this.groupBoxBacklashCalibration.Text = "Backlash Calibration";
-            // 
-            // btnFinishBacklash
-            // 
-            this.btnFinishBacklash.Enabled = false;
-            this.btnFinishBacklash.Location = new System.Drawing.Point(254, 20);
-            this.btnFinishBacklash.Name = "btnFinishBacklash";
-            this.btnFinishBacklash.Size = new System.Drawing.Size(60, 25);
-            this.btnFinishBacklash.TabIndex = 38;
-            this.btnFinishBacklash.Text = "Finish";
-            this.btnFinishBacklash.UseVisualStyleBackColor = true;
-            this.btnFinishBacklash.Click += new System.EventHandler(this.BtnFinishBacklash_Click);
-            // 
-            // btnBacklashMark
-            // 
-            this.btnBacklashMark.Enabled = false;
-            this.btnBacklashMark.Location = new System.Drawing.Point(162, 20);
-            this.btnBacklashMark.Name = "btnBacklashMark";
-            this.btnBacklashMark.Size = new System.Drawing.Size(50, 25);
-            this.btnBacklashMark.TabIndex = 37;
-            this.btnBacklashMark.Text = "Mark";
-            this.btnBacklashMark.UseVisualStyleBackColor = true;
-            this.btnBacklashMark.Click += new System.EventHandler(this.BtnBacklashMark_Click);
-            // 
-            // btnBacklashStep
-            // 
-            this.btnBacklashStep.Enabled = false;
-            this.btnBacklashStep.Location = new System.Drawing.Point(102, 20);
-            this.btnBacklashStep.Name = "btnBacklashStep";
-            this.btnBacklashStep.Size = new System.Drawing.Size(50, 25);
-            this.btnBacklashStep.TabIndex = 36;
-            this.btnBacklashStep.Text = "Step";
-            this.btnBacklashStep.UseVisualStyleBackColor = true;
-            this.btnBacklashStep.Click += new System.EventHandler(this.BtnBacklashStep_Click);
-            // 
-            // btnStartBacklash
-            // 
-            this.btnStartBacklash.Enabled = false;
-            this.btnStartBacklash.Location = new System.Drawing.Point(10, 20);
-            this.btnStartBacklash.Name = "btnStartBacklash";
-            this.btnStartBacklash.Size = new System.Drawing.Size(60, 25);
-            this.btnStartBacklash.TabIndex = 35;
-            this.btnStartBacklash.Text = "Start";
-            this.btnStartBacklash.UseVisualStyleBackColor = true;
-            this.btnStartBacklash.Click += new System.EventHandler(this.BtnStartBacklash_Click);
-            // 
-            // labelBacklashSteps
-            // 
-            this.labelBacklashSteps.AutoSize = true;
-            this.labelBacklashSteps.Location = new System.Drawing.Point(112, 54);
-            this.labelBacklashSteps.Name = "labelBacklashSteps";
-            this.labelBacklashSteps.Size = new System.Drawing.Size(37, 13);
-            this.labelBacklashSteps.TabIndex = 45;
-            this.labelBacklashSteps.Text = "Steps:";
-            // 
-            // comboBoxBacklashSteps
-            // 
-            this.comboBoxBacklashSteps.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxBacklashSteps.FormattingEnabled = true;
-            this.comboBoxBacklashSteps.Items.AddRange(new object[] {
-            "1",
-            "5",
-            "10",
-            "25",
-            "50",
-            "100",
-            "200"});
-            this.comboBoxBacklashSteps.Location = new System.Drawing.Point(152, 51);
-            this.comboBoxBacklashSteps.Name = "comboBoxBacklashSteps";
-            this.comboBoxBacklashSteps.Size = new System.Drawing.Size(60, 21);
-            this.comboBoxBacklashSteps.TabIndex = 46;
-            // 
             // groupBoxCalibration
             // 
-            this.groupBoxCalibration.Controls.Add(this.btnFinishCalibration);
-            this.groupBoxCalibration.Controls.Add(this.btnCalibrationBackward);
-            this.groupBoxCalibration.Controls.Add(this.btnCalibrationForward);
-            this.groupBoxCalibration.Controls.Add(this.btnStartCalibration);
-            this.groupBoxCalibration.Controls.Add(this.labelCalibrationSteps);
-            this.groupBoxCalibration.Controls.Add(this.comboBoxCalibrationSteps);
+            this.groupBoxCalibration.Controls.Add(this.comboBoxBackwardSteps);
+            this.groupBoxCalibration.Controls.Add(this.btnMoveBackward);
+            this.groupBoxCalibration.Controls.Add(this.btnSetToPos1);
+            this.groupBoxCalibration.Controls.Add(this.comboBoxForwardSteps);
+            this.groupBoxCalibration.Controls.Add(this.btnMoveForward);
             this.groupBoxCalibration.Location = new System.Drawing.Point(10, 10);
             this.groupBoxCalibration.Name = "groupBoxCalibration";
             this.groupBoxCalibration.Size = new System.Drawing.Size(540, 90);
             this.groupBoxCalibration.TabIndex = 30;
             this.groupBoxCalibration.TabStop = false;
-            this.groupBoxCalibration.Text = "Revolution Calibration";
+            this.groupBoxCalibration.Text = "Manual Calibration";
             // 
-            // btnFinishCalibration
+            // comboBoxBackwardSteps
             // 
-            this.btnFinishCalibration.Enabled = false;
-            this.btnFinishCalibration.Location = new System.Drawing.Point(254, 20);
-            this.btnFinishCalibration.Name = "btnFinishCalibration";
-            this.btnFinishCalibration.Size = new System.Drawing.Size(60, 25);
-            this.btnFinishCalibration.TabIndex = 34;
-            this.btnFinishCalibration.Text = "Finish";
-            this.btnFinishCalibration.UseVisualStyleBackColor = true;
-            this.btnFinishCalibration.Click += new System.EventHandler(this.BtnFinishCalibration_Click);
-            // 
-            // btnCalibrationBackward
-            // 
-            this.btnCalibrationBackward.Enabled = false;
-            this.btnCalibrationBackward.Location = new System.Drawing.Point(162, 20);
-            this.btnCalibrationBackward.Name = "btnCalibrationBackward";
-            this.btnCalibrationBackward.Size = new System.Drawing.Size(50, 25);
-            this.btnCalibrationBackward.TabIndex = 33;
-            this.btnCalibrationBackward.Text = "Back";
-            this.btnCalibrationBackward.UseVisualStyleBackColor = true;
-            this.btnCalibrationBackward.Click += new System.EventHandler(this.BtnCalibrationBackward_Click);
-            // 
-            // btnCalibrationForward
-            // 
-            this.btnCalibrationForward.Enabled = false;
-            this.btnCalibrationForward.Location = new System.Drawing.Point(102, 20);
-            this.btnCalibrationForward.Name = "btnCalibrationForward";
-            this.btnCalibrationForward.Size = new System.Drawing.Size(50, 25);
-            this.btnCalibrationForward.TabIndex = 32;
-            this.btnCalibrationForward.Text = "Fwd";
-            this.btnCalibrationForward.UseVisualStyleBackColor = true;
-            this.btnCalibrationForward.Click += new System.EventHandler(this.BtnCalibrationForward_Click);
-            // 
-            // btnStartCalibration
-            // 
-            this.btnStartCalibration.Enabled = false;
-            this.btnStartCalibration.Location = new System.Drawing.Point(10, 20);
-            this.btnStartCalibration.Name = "btnStartCalibration";
-            this.btnStartCalibration.Size = new System.Drawing.Size(60, 25);
-            this.btnStartCalibration.TabIndex = 31;
-            this.btnStartCalibration.Text = "Start";
-            this.btnStartCalibration.UseVisualStyleBackColor = true;
-            this.btnStartCalibration.Click += new System.EventHandler(this.BtnStartCalibration_Click);
-            // 
-            // labelCalibrationSteps
-            // 
-            this.labelCalibrationSteps.AutoSize = true;
-            this.labelCalibrationSteps.Location = new System.Drawing.Point(112, 54);
-            this.labelCalibrationSteps.Name = "labelCalibrationSteps";
-            this.labelCalibrationSteps.Size = new System.Drawing.Size(37, 13);
-            this.labelCalibrationSteps.TabIndex = 43;
-            this.labelCalibrationSteps.Text = "Steps:";
-            // 
-            // comboBoxCalibrationSteps
-            // 
-            this.comboBoxCalibrationSteps.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxCalibrationSteps.FormattingEnabled = true;
-            this.comboBoxCalibrationSteps.Items.AddRange(new object[] {
+            this.comboBoxBackwardSteps.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxBackwardSteps.FormattingEnabled = true;
+            this.comboBoxBackwardSteps.Items.AddRange(new object[] {
             "1",
             "5",
             "10",
-            "25",
+            "20",
             "50",
             "100",
             "200"});
-            this.comboBoxCalibrationSteps.Location = new System.Drawing.Point(152, 51);
-            this.comboBoxCalibrationSteps.Name = "comboBoxCalibrationSteps";
-            this.comboBoxCalibrationSteps.Size = new System.Drawing.Size(60, 21);
-            this.comboBoxCalibrationSteps.TabIndex = 44;
+            this.comboBoxBackwardSteps.Location = new System.Drawing.Point(126, 38);
+            this.comboBoxBackwardSteps.Name = "comboBoxBackwardSteps";
+            this.comboBoxBackwardSteps.Size = new System.Drawing.Size(70, 21);
+            this.comboBoxBackwardSteps.TabIndex = 31;
+            // 
+            // btnMoveBackward
+            // 
+            this.btnMoveBackward.Enabled = false;
+            this.btnMoveBackward.Location = new System.Drawing.Point(10, 30);
+            this.btnMoveBackward.Name = "btnMoveBackward";
+            this.btnMoveBackward.Size = new System.Drawing.Size(110, 33);
+            this.btnMoveBackward.TabIndex = 32;
+            this.btnMoveBackward.Text = "Move Backward";
+            this.btnMoveBackward.UseVisualStyleBackColor = true;
+            this.btnMoveBackward.Click += new System.EventHandler(this.BtnMoveBackward_Click);
+            // 
+            // btnSetToPos1
+            // 
+            this.btnSetToPos1.Enabled = false;
+            this.btnSetToPos1.Location = new System.Drawing.Point(220, 30);
+            this.btnSetToPos1.Name = "btnSetToPos1";
+            this.btnSetToPos1.Size = new System.Drawing.Size(100, 40);
+            this.btnSetToPos1.TabIndex = 33;
+            this.btnSetToPos1.Text = "Set to Pos 1";
+            this.btnSetToPos1.UseVisualStyleBackColor = true;
+            this.btnSetToPos1.Click += new System.EventHandler(this.BtnSetToPos1_Click);
+            // 
+            // comboBoxForwardSteps
+            // 
+            this.comboBoxForwardSteps.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxForwardSteps.FormattingEnabled = true;
+            this.comboBoxForwardSteps.Items.AddRange(new object[] {
+            "1",
+            "5",
+            "10",
+            "20",
+            "50",
+            "100",
+            "200"});
+            this.comboBoxForwardSteps.Location = new System.Drawing.Point(344, 38);
+            this.comboBoxForwardSteps.Name = "comboBoxForwardSteps";
+            this.comboBoxForwardSteps.Size = new System.Drawing.Size(70, 21);
+            this.comboBoxForwardSteps.TabIndex = 34;
+            // 
+            // btnMoveForward
+            // 
+            this.btnMoveForward.Enabled = false;
+            this.btnMoveForward.Location = new System.Drawing.Point(420, 30);
+            this.btnMoveForward.Name = "btnMoveForward";
+            this.btnMoveForward.Size = new System.Drawing.Size(110, 33);
+            this.btnMoveForward.TabIndex = 35;
+            this.btnMoveForward.Text = "Move Forward";
+            this.btnMoveForward.UseVisualStyleBackColor = true;
+            this.btnMoveForward.Click += new System.EventHandler(this.BtnMoveForward_Click);
             // 
             // tabPageManualControl
             // 
@@ -1200,6 +1086,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.Controls.Add(this.btnDisconnect);
             this.Controls.Add(this.btnConnect);
             this.Controls.Add(this.labelOr);
+            this.Controls.Add(this.btnRefreshPorts);
             this.Controls.Add(this.btnSetPort);
             this.Controls.Add(this.comboBoxComPort);
             this.Controls.Add(this.label2);
@@ -1219,8 +1106,6 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.tabPageConfiguration.ResumeLayout(false);
             this.tabPageConfiguration.PerformLayout();
             this.tabPageMotorConfig.ResumeLayout(false);
-            this.groupBoxDirection.ResumeLayout(false);
-            this.groupBoxDirection.PerformLayout();
             this.groupBoxMotorSettings.ResumeLayout(false);
             this.groupBoxMotorSettings.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericStepsPerRev)).EndInit();
@@ -1229,10 +1114,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             ((System.ComponentModel.ISupportInitialize)(this.numericMaxSpeed)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericMotorSpeed)).EndInit();
             this.tabPageCalibration.ResumeLayout(false);
-            this.groupBoxBacklashCalibration.ResumeLayout(false);
-            this.groupBoxBacklashCalibration.PerformLayout();
             this.groupBoxCalibration.ResumeLayout(false);
-            this.groupBoxCalibration.PerformLayout();
             this.tabPageManualControl.ResumeLayout(false);
             this.groupBoxStepping.ResumeLayout(false);
             this.groupBoxStepping.PerformLayout();
@@ -1254,10 +1136,12 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         private System.Windows.Forms.PictureBox picASCOM;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox comboBoxComPort;
+        private System.Windows.Forms.Button btnRefreshPorts;
         private System.Windows.Forms.Button btnSetPort;
         private System.Windows.Forms.Label labelOr;
         private System.Windows.Forms.Button btnConnect;
         private System.Windows.Forms.Button btnDisconnect;
+        private System.Windows.Forms.Button btnReloadFilterNames;
         private System.Windows.Forms.Button btnSet;
         private System.Windows.Forms.Label labelCompilationDate;
         private System.Windows.Forms.Label labelSelectFilter;
@@ -1272,19 +1156,11 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         private System.Windows.Forms.TabPage tabPageLog;
         private System.Windows.Forms.TextBox textBoxLog;
         private System.Windows.Forms.GroupBox groupBoxCalibration;
-        private System.Windows.Forms.Button btnStartCalibration;
-        private System.Windows.Forms.Button btnCalibrationForward;
-        private System.Windows.Forms.Button btnCalibrationBackward;
-        private System.Windows.Forms.Button btnFinishCalibration;
-        private System.Windows.Forms.Label labelCalibrationSteps;
-        private System.Windows.Forms.ComboBox comboBoxCalibrationSteps;
-        private System.Windows.Forms.GroupBox groupBoxBacklashCalibration;
-        private System.Windows.Forms.Button btnStartBacklash;
-        private System.Windows.Forms.Button btnBacklashStep;
-        private System.Windows.Forms.Button btnBacklashMark;
-        private System.Windows.Forms.Button btnFinishBacklash;
-        private System.Windows.Forms.Label labelBacklashSteps;
-        private System.Windows.Forms.ComboBox comboBoxBacklashSteps;
+        private System.Windows.Forms.ComboBox comboBoxBackwardSteps;
+        private System.Windows.Forms.Button btnMoveBackward;
+        private System.Windows.Forms.Button btnSetToPos1;
+        private System.Windows.Forms.ComboBox comboBoxForwardSteps;
+        private System.Windows.Forms.Button btnMoveForward;
         private System.Windows.Forms.Label labelFilterCount;
         private System.Windows.Forms.ComboBox comboBoxFilterCount;
         private System.Windows.Forms.Label labelFilterNames;
@@ -1296,6 +1172,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         private System.Windows.Forms.TextBox textBoxFilter6;
         private System.Windows.Forms.TextBox textBoxFilter7;
         private System.Windows.Forms.TextBox textBoxFilter8;
+        private System.Windows.Forms.TextBox textBoxFilter9;
         private System.Windows.Forms.Label labelFilter1;
         private System.Windows.Forms.Label labelFilter2;
         private System.Windows.Forms.Label labelFilter3;
@@ -1304,6 +1181,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         private System.Windows.Forms.Label labelFilter6;
         private System.Windows.Forms.Label labelFilter7;
         private System.Windows.Forms.Label labelFilter8;
+        private System.Windows.Forms.Label labelFilter9;
         private System.Windows.Forms.GroupBox groupBoxMotorSettings;
         private System.Windows.Forms.Button btnSetStepsPerRev;
         private System.Windows.Forms.Button btnResetMotorConfig;
@@ -1318,11 +1196,6 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         private System.Windows.Forms.Label labelMotorSpeed;
         private System.Windows.Forms.NumericUpDown numericStepsPerRev;
         private System.Windows.Forms.Label labelStepsPerRev;
-        private System.Windows.Forms.GroupBox groupBoxDirection;
-        private System.Windows.Forms.RadioButton radioUnidirectional;
-        private System.Windows.Forms.RadioButton radioBidirectional;
-        private System.Windows.Forms.CheckBox checkBoxReverse;
-        private System.Windows.Forms.Button btnSetDirectionConfig;
         private System.Windows.Forms.GroupBox groupBoxStepping;
         private System.Windows.Forms.Label labelStepAmount;
         private System.Windows.Forms.NumericUpDown numericStepAmount;

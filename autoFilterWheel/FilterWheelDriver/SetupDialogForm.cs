@@ -20,10 +20,6 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         private Queue<string> logBuffer = new Queue<string>();
         private const int MAX_LOG_LINES = 1000;
 
-        // Backlash calibration state
-        private bool backlashCalibrationActive = false;
-        private bool backlashForwardDirection = true;
-
         public SetupDialogForm(TraceLogger tlDriver)
         {
             InitializeComponent();
@@ -71,7 +67,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
                 // Update filter names array
                 FilterWheelHardware.filterNames = new string[8]; // Always allocate 8 slots
-                TextBox[] textBoxes = { textBoxFilter1, textBoxFilter2, textBoxFilter3, textBoxFilter4, textBoxFilter5, textBoxFilter6, textBoxFilter7, textBoxFilter8 };
+                TextBox[] textBoxes = { textBoxFilter1, textBoxFilter2, textBoxFilter3, textBoxFilter4, textBoxFilter5, textBoxFilter6, textBoxFilter7, textBoxFilter8, textBoxFilter9 };
 
                 for (int i = 0; i < 8; i++)
                 {
@@ -119,12 +115,11 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             }
         }
 
-        private void InitUI()
+        private void RefreshComPortList()
         {
-
             // set the list of COM ports to those that are currently available
             comboBoxComPort.Items.Clear(); // Clear any existing entries
-            using (Serial serial = new Serial()) // User the Se5rial component to get an extended list of COM ports
+            using (Serial serial = new Serial()) // User the Serial component to get an extended list of COM ports
             {
                 comboBoxComPort.Items.AddRange(serial.AvailableCOMPorts);
             }
@@ -141,6 +136,11 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             {
                 comboBoxComPort.SelectedItem = FilterWheelHardware.comPort;
             }
+        }
+
+        private void InitUI()
+        {
+            RefreshComPortList();
 
             // Add event handler for COM port selection change
             comboBoxComPort.SelectedIndexChanged += ComboBoxComPort_SelectedIndexChanged;
@@ -173,6 +173,10 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
             // Initialize button states
             UpdateConnectionButtons(false);
+
+            // Set default values for calibration step comboboxes
+            comboBoxBackwardSteps.SelectedItem = "10";
+            comboBoxForwardSteps.SelectedItem = "10";
 
             // Set compilation date
             labelCompilationDate.Text = $"Built: {GetCompilationDate():yyyy-MM-dd HH:mm}";
@@ -207,15 +211,41 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         private void UpdateFilterVisibility()
         {
             // Arrays for easy access to controls
-            TextBox[] textBoxes = { textBoxFilter1, textBoxFilter2, textBoxFilter3, textBoxFilter4, textBoxFilter5, textBoxFilter6, textBoxFilter7, textBoxFilter8 };
-            Label[] labels = { labelFilter1, labelFilter2, labelFilter3, labelFilter4, labelFilter5, labelFilter6, labelFilter7, labelFilter8 };
+            TextBox[] textBoxes = { textBoxFilter1, textBoxFilter2, textBoxFilter3, textBoxFilter4, textBoxFilter5, textBoxFilter6, textBoxFilter7, textBoxFilter8, textBoxFilter9 };
+            Label[] labels = { labelFilter1, labelFilter2, labelFilter3, labelFilter4, labelFilter5, labelFilter6, labelFilter7, labelFilter8, labelFilter9 };
 
-            // Show/hide controls based on filter count
-            for (int i = 0; i < 8; i++)
+            // Show/hide controls based on filter count (max 9)
+            for (int i = 0; i < 9; i++)
             {
                 bool visible = i < FilterWheelHardware.filterCount;
                 textBoxes[i].Visible = visible;
                 labels[i].Visible = visible;
+            }
+
+            // Update filter selection combobox
+            PopulateFilterComboBox();
+        }
+
+        private void PopulateFilterComboBox()
+        {
+            comboBoxSelectFilter.Items.Clear();
+
+            TextBox[] textBoxes = { textBoxFilter1, textBoxFilter2, textBoxFilter3, textBoxFilter4, textBoxFilter5, textBoxFilter6, textBoxFilter7, textBoxFilter8 };
+
+            for (int i = 0; i < FilterWheelHardware.filterCount; i++)
+            {
+                string filterName = textBoxes[i].Text.Trim();
+                if (string.IsNullOrWhiteSpace(filterName))
+                {
+                    filterName = $"Filter{i + 1}";
+                }
+                comboBoxSelectFilter.Items.Add($"{i + 1}: {filterName}");
+            }
+
+            // Select first item by default if available
+            if (comboBoxSelectFilter.Items.Count > 0)
+            {
+                comboBoxSelectFilter.SelectedIndex = 0;
             }
         }
 
@@ -224,19 +254,16 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             btnConnect.Enabled = !connected && comboBoxComPort.SelectedItem != null && comboBoxComPort.SelectedItem.ToString() != NO_PORTS_MESSAGE;
             btnDisconnect.Enabled = connected;
             btnSet.Enabled = connected;
+            btnReloadFilterNames.Enabled = connected;
             comboBoxComPort.Enabled = !connected;
 
             // Enable calibration buttons only when connected
-            btnStartCalibration.Enabled = connected;
-            btnCalibrationForward.Enabled = false; // Only enabled during calibration
-            btnCalibrationBackward.Enabled = false; // Only enabled during calibration
-            btnFinishCalibration.Enabled = false; // Only enabled during calibration
+            btnMoveBackward.Enabled = connected;
+            btnSetToPos1.Enabled = connected;
+            btnMoveForward.Enabled = connected;
 
-            // Enable backlash calibration buttons only when connected
-            btnStartBacklash.Enabled = connected;
-            btnBacklashStep.Enabled = false; // Only enabled during backlash calibration
-            btnBacklashMark.Enabled = false; // Only enabled during backlash calibration
-            btnFinishBacklash.Enabled = false; // Only enabled during backlash calibration
+            // Enable filter selection only when connected
+            btnSelectFilter.Enabled = connected;
         }
 
         private void BtnConnect_Click(object sender, EventArgs e)
@@ -317,7 +344,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 tl.LogMessage("BtnSet_Click", $"Filter count response: {fcResponse}");
 
                 // Get filter names from textboxes
-                TextBox[] textBoxes = { textBoxFilter1, textBoxFilter2, textBoxFilter3, textBoxFilter4, textBoxFilter5, textBoxFilter6, textBoxFilter7, textBoxFilter8 };
+                TextBox[] textBoxes = { textBoxFilter1, textBoxFilter2, textBoxFilter3, textBoxFilter4, textBoxFilter5, textBoxFilter6, textBoxFilter7, textBoxFilter8, textBoxFilter9 };
 
                 // Send filter names one by one - correct format: SN1:Luminance, SN2:Red, etc.
                 for (int i = 0; i < filterCount; i++)
@@ -375,7 +402,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                     try
                     {
                         string nameResponse = SendCommandWithLog($"GN{i}");
-                        string prefix = $"N{i}:";
+                        string prefix = $"N{i}:";  // Firmware returns "N1:Name" format (not GN)
                         if (nameResponse.StartsWith(prefix))
                         {
                             retrievedNames[i - 1] = nameResponse.Substring(prefix.Length);
@@ -384,7 +411,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                         else
                         {
                             retrievedNames[i - 1] = $"Filter{i}";
-                            AddToLog("WARN", $"Invalid response for filter {i}, using default name");
+                            AddToLog("WARN", $"Invalid response for filter {i}: '{nameResponse}', using default name");
                         }
                     }
                     catch (Exception ex)
@@ -395,11 +422,11 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                     }
                 }
 
-                // Update UI with retrieved names
-                FilterWheelHardware.filterNames = new string[8];
-                TextBox[] textBoxes = { textBoxFilter1, textBoxFilter2, textBoxFilter3, textBoxFilter4, textBoxFilter5, textBoxFilter6, textBoxFilter7, textBoxFilter8 };
+                // Update UI with retrieved names (max 9 filters)
+                FilterWheelHardware.filterNames = new string[9];
+                TextBox[] textBoxes = { textBoxFilter1, textBoxFilter2, textBoxFilter3, textBoxFilter4, textBoxFilter5, textBoxFilter6, textBoxFilter7, textBoxFilter8, textBoxFilter9 };
 
-                for (int i = 0; i < 8; i++)
+                for (int i = 0; i < 9; i++)
                 {
                     if (i < retrievedNames.Length)
                     {
@@ -429,8 +456,39 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             UpdateConnectionButtons(serialComm != null && serialComm.IsConnected);
         }
 
+        private void BtnRefreshPorts_Click(object sender, EventArgs e)
+        {
+            tl.LogMessage("BtnRefreshPorts_Click", "Refreshing COM port list");
+            RefreshComPortList();
+        }
 
-        private void BtnStartCalibration_Click(object sender, EventArgs e)
+        private void BtnSetPort_Click(object sender, EventArgs e)
+        {
+            if (comboBoxComPort.SelectedItem == null || comboBoxComPort.SelectedItem.ToString() == NO_PORTS_MESSAGE)
+            {
+                MessageBox.Show("Please select a valid COM port.", "No Port Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                string selectedPort = comboBoxComPort.SelectedItem.ToString();
+                FilterWheelHardware.comPort = selectedPort;
+
+                tl.LogMessage("BtnSetPort_Click", $"Port set to {selectedPort}, closing dialog");
+
+                // Close the dialog
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnSetPort_Click", $"Error: {ex.Message}");
+                MessageBox.Show($"Error setting port: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnReloadFilterNames_Click(object sender, EventArgs e)
         {
             if (!serialComm.IsConnected)
             {
@@ -440,111 +498,100 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
             try
             {
-                tl.LogMessage("BtnStartCalibration_Click", "Starting revolution calibration");
-                AddToLog("INFO", "Starting revolution calibration...");
+                tl.LogMessage("BtnReloadFilterNames_Click", "Reloading filter names from device");
+                AddToLog("INFO", "Reloading filter names from device...");
 
-                string response = SendCommandWithLog("REVCAL");
+                RetrieveFilterConfiguration();
 
-                // Update button states for calibration mode
-                btnStartCalibration.Enabled = false;
-                btnCalibrationForward.Enabled = true;
-                btnCalibrationBackward.Enabled = true;
-                btnFinishCalibration.Enabled = true;
-                btnSet.Enabled = false;
-
-                tl.LogMessage("BtnStartCalibration_Click", "Revolution calibration started successfully");
-                AddToLog("INFO", "Revolution calibration started!");
-                MessageBox.Show("Revolution calibration started!\nUse Forward/Back buttons to adjust the wheel position.\nClick Finish when the wheel completes exactly one revolution.", "Calibration Started", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Filter names reloaded successfully!", "Reload Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                tl.LogMessage("BtnStartCalibration_Click", $"Error starting calibration: {ex.Message}");
-                AddToLog("ERR", $"Calibration start failed: {ex.Message}");
-                MessageBox.Show($"Error starting calibration: {ex.Message}", "Calibration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                tl.LogMessage("BtnReloadFilterNames_Click", $"Error reloading filter names: {ex.Message}");
+                AddToLog("ERR", $"Error reloading filter names: {ex.Message}");
+                MessageBox.Show($"Error reloading filter names: {ex.Message}", "Reload Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void BtnCalibrationForward_Click(object sender, EventArgs e)
+        private void BtnSelectFilter_Click(object sender, EventArgs e)
         {
             if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
+            }
+
+            if (comboBoxSelectFilter.SelectedItem == null)
+            {
+                MessageBox.Show("Please select a filter position.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
             try
             {
-                string response = SendCommandWithLog("RCP3"); // Add 3 steps for finer control
-                tl.LogMessage("BtnCalibrationForward_Click", "Added 3 steps to calibration");
-                AddToLog("INFO", "Added 3 steps forward");
-            }
-            catch (Exception ex)
-            {
-                tl.LogMessage("BtnCalibrationForward_Click", $"Error during forward adjustment: {ex.Message}");
-                AddToLog("ERR", $"Forward adjustment failed: {ex.Message}");
-                MessageBox.Show($"Error during forward adjustment: {ex.Message}", "Calibration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void BtnCalibrationBackward_Click(object sender, EventArgs e)
-        {
-            if (!serialComm.IsConnected)
-                return;
-
-            try
-            {
-                string response = SendCommandWithLog("RCM3"); // Subtract 3 steps for finer control
-                tl.LogMessage("BtnCalibrationBackward_Click", "Subtracted 3 steps from calibration");
-                AddToLog("INFO", "Subtracted 3 steps backward");
-            }
-            catch (Exception ex)
-            {
-                tl.LogMessage("BtnCalibrationBackward_Click", $"Error during backward adjustment: {ex.Message}");
-                AddToLog("ERR", $"Backward adjustment failed: {ex.Message}");
-                MessageBox.Show($"Error during backward adjustment: {ex.Message}", "Calibration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void BtnFinishCalibration_Click(object sender, EventArgs e)
-        {
-            if (!serialComm.IsConnected)
-                return;
-
-            try
-            {
-                tl.LogMessage("BtnFinishCalibration_Click", "Finishing revolution calibration");
-
-                DialogResult result = MessageBox.Show("Are you sure the filter wheel has completed exactly one full revolution?\n\nThis will save the calibrated steps per revolution to the device.",
-                                                    "Confirm Calibration", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-                if (result == DialogResult.Yes)
+                // Extract position number from "1: Luminance" format
+                string selected = comboBoxSelectFilter.SelectedItem.ToString();
+                int colonIndex = selected.IndexOf(':');
+                if (colonIndex > 0)
                 {
-                    string response = SendCommandWithLog("RCFIN");
+                    string positionStr = selected.Substring(0, colonIndex).Trim();
+                    int position = int.Parse(positionStr);
 
-                    // Reset button states
-                    btnStartCalibration.Enabled = true;
-                    btnCalibrationForward.Enabled = false;
-                    btnCalibrationBackward.Enabled = false;
-                    btnFinishCalibration.Enabled = false;
-                    btnSet.Enabled = true;
+                    string command = $"MP{position}";
+                    tl.LogMessage("BtnSelectFilter_Click", $"Moving to filter position {position}");
+                    AddToLog("INFO", $"Moving to filter position {position}...");
 
-                    tl.LogMessage("BtnFinishCalibration_Click", "Revolution calibration finished successfully");
-                    AddToLog("INFO", "Revolution calibration completed!");
-                    MessageBox.Show("Revolution calibration completed and saved!\nThe filter wheel is now calibrated for precise positioning.", "Calibration Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    string response = SendCommandWithLog(command);
+
+                    tl.LogMessage("BtnSelectFilter_Click", $"Response: {response}");
+                    AddToLog("INFO", $"Moved to filter position {position}");
+                    MessageBox.Show($"Filter wheel moved to position {position}!", "Movement Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)
             {
-                tl.LogMessage("BtnFinishCalibration_Click", $"Error finishing calibration: {ex.Message}");
-                MessageBox.Show($"Error finishing calibration: {ex.Message}", "Calibration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                // Reset button states on error
-                btnStartCalibration.Enabled = true;
-                btnCalibrationForward.Enabled = false;
-                btnCalibrationBackward.Enabled = false;
-                btnFinishCalibration.Enabled = false;
-                btnSet.Enabled = true;
+                tl.LogMessage("BtnSelectFilter_Click", $"Error: {ex.Message}");
+                AddToLog("ERR", $"Filter selection failed: {ex.Message}");
+                MessageBox.Show($"Error selecting filter: {ex.Message}", "Selection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void BtnStartBacklash_Click(object sender, EventArgs e)
+
+        private void BtnMoveBackward_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (comboBoxBackwardSteps.SelectedItem == null)
+            {
+                MessageBox.Show("Please select number of steps.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                string steps = comboBoxBackwardSteps.SelectedItem.ToString();
+                string command = $"SB{steps}";
+                tl.LogMessage("BtnMoveBackward_Click", $"Sending command: {command}");
+                AddToLog("INFO", $"Moving backward {steps} steps...");
+
+                string response = SendCommandWithLog(command);
+
+                tl.LogMessage("BtnMoveBackward_Click", $"Response: {response}");
+                AddToLog("INFO", $"Moved backward {steps} steps");
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnMoveBackward_Click", $"Error: {ex.Message}");
+                AddToLog("ERR", $"Move backward failed: {ex.Message}");
+                MessageBox.Show($"Error moving backward: {ex.Message}", "Movement Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnSetToPos1_Click(object sender, EventArgs e)
         {
             if (!serialComm.IsConnected)
             {
@@ -554,144 +601,57 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
             try
             {
-                tl.LogMessage("BtnStartBacklash_Click", "Starting backlash calibration");
-                AddToLog("INFO", "Starting backlash calibration...");
+                tl.LogMessage("BtnSetToPos1_Click", "Sending CAL command");
+                AddToLog("INFO", "Setting position to 1 (calibrating)...");
 
-                string response = SendCommandWithLog("BLCAL");
+                string response = SendCommandWithLog("CAL");
 
-                if (response.Contains("ERROR:ENCODER_REQUIRED"))
-                {
-                    AddToLog("ERR", "Encoder required for backlash calibration");
-                    MessageBox.Show("Backlash calibration requires an encoder (AS5600). Please ensure it's connected and detected.", "Encoder Required", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                // Update button states for backlash calibration mode
-                backlashCalibrationActive = true;
-                backlashForwardDirection = true;
-                btnStartBacklash.Enabled = false;
-                btnBacklashStep.Enabled = true;
-                btnBacklashMark.Enabled = true;
-                btnFinishBacklash.Enabled = false;
-
-                // Disable revolution calibration during backlash calibration
-                btnStartCalibration.Enabled = false;
-                btnSet.Enabled = false;
-
-                tl.LogMessage("BtnStartBacklash_Click", "Backlash calibration started successfully");
-                AddToLog("INFO", "Backlash calibration started - testing forward direction");
-                MessageBox.Show("Backlash calibration started!\n\n1. Use 'Step' to move in small increments\n2. Watch the encoder reading\n3. Click 'Mark' when you detect movement\n4. Process will repeat for reverse direction", "Backlash Calibration Started", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                tl.LogMessage("BtnSetToPos1_Click", $"Response: {response}");
+                AddToLog("INFO", "Position set to 1 - Calibration complete!");
+                MessageBox.Show("Position set to 1!\n\nThe current position is now registered as filter position 1.", "Calibration Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                tl.LogMessage("BtnStartBacklash_Click", $"Error starting backlash calibration: {ex.Message}");
-                AddToLog("ERR", $"Backlash calibration start failed: {ex.Message}");
-                MessageBox.Show($"Error starting backlash calibration: {ex.Message}", "Calibration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                tl.LogMessage("BtnSetToPos1_Click", $"Error: {ex.Message}");
+                AddToLog("ERR", $"Calibration failed: {ex.Message}");
+                MessageBox.Show($"Error during calibration: {ex.Message}", "Calibration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void BtnBacklashStep_Click(object sender, EventArgs e)
+        private void BtnMoveForward_Click(object sender, EventArgs e)
         {
-            if (!serialComm.IsConnected || !backlashCalibrationActive)
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
+            }
+
+            if (comboBoxForwardSteps.SelectedItem == null)
+            {
+                MessageBox.Show("Please select number of steps.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
             try
             {
-                // Use 2 steps for very fine control
-                string response = SendCommandWithLog("BLS2");
-                string direction = backlashForwardDirection ? "forward" : "backward";
-                tl.LogMessage("BtnBacklashStep_Click", $"Backlash test step in {direction} direction");
-                AddToLog("INFO", $"Test step ({direction} direction)");
+                string steps = comboBoxForwardSteps.SelectedItem.ToString();
+                string command = $"SF{steps}";
+                tl.LogMessage("BtnMoveForward_Click", $"Sending command: {command}");
+                AddToLog("INFO", $"Moving forward {steps} steps...");
+
+                string response = SendCommandWithLog(command);
+
+                tl.LogMessage("BtnMoveForward_Click", $"Response: {response}");
+                AddToLog("INFO", $"Moved forward {steps} steps");
             }
             catch (Exception ex)
             {
-                tl.LogMessage("BtnBacklashStep_Click", $"Error during backlash step: {ex.Message}");
-                AddToLog("ERR", $"Backlash step failed: {ex.Message}");
-                MessageBox.Show($"Error during backlash step: {ex.Message}", "Calibration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                tl.LogMessage("BtnMoveForward_Click", $"Error: {ex.Message}");
+                AddToLog("ERR", $"Move forward failed: {ex.Message}");
+                MessageBox.Show($"Error moving forward: {ex.Message}", "Movement Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void BtnBacklashMark_Click(object sender, EventArgs e)
-        {
-            if (!serialComm.IsConnected || !backlashCalibrationActive)
-                return;
-
-            try
-            {
-                string response = SendCommandWithLog("BLM");
-                tl.LogMessage("BtnBacklashMark_Click", "Backlash movement marked");
-
-                if (response.StartsWith("BLM_FORWARD:"))
-                {
-                    backlashForwardDirection = false;
-                    AddToLog("INFO", "Forward backlash measured - now testing backward direction");
-                    MessageBox.Show("Forward direction complete!\n\nNow testing backward direction:\n1. Use 'Step' to move in reverse\n2. Click 'Mark' when you detect movement", "Testing Backward Direction", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else if (response.StartsWith("BLM_BACKWARD:"))
-                {
-                    AddToLog("INFO", "Backward backlash measured - calibration ready to finish");
-                    btnFinishBacklash.Enabled = true;
-                    btnBacklashStep.Enabled = false;
-                    btnBacklashMark.Enabled = false;
-                    MessageBox.Show("Both directions measured!\n\nClick 'Finish' to save the backlash calibration.", "Ready to Finish", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-            }
-            catch (Exception ex)
-            {
-                tl.LogMessage("BtnBacklashMark_Click", $"Error marking backlash: {ex.Message}");
-                AddToLog("ERR", $"Backlash mark failed: {ex.Message}");
-                MessageBox.Show($"Error marking backlash: {ex.Message}", "Calibration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void BtnFinishBacklash_Click(object sender, EventArgs e)
-        {
-            if (!serialComm.IsConnected || !backlashCalibrationActive)
-                return;
-
-            try
-            {
-                tl.LogMessage("BtnFinishBacklash_Click", "Finishing backlash calibration");
-
-                DialogResult result = MessageBox.Show("Save the backlash calibration?\n\nThis will apply the measured backlash compensation to all future movements.",
-                                                    "Confirm Backlash Calibration", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-                if (result == DialogResult.Yes)
-                {
-                    string response = SendCommandWithLog("BLFIN");
-
-                    // Reset button states
-                    backlashCalibrationActive = false;
-                    btnStartBacklash.Enabled = true;
-                    btnBacklashStep.Enabled = false;
-                    btnBacklashMark.Enabled = false;
-                    btnFinishBacklash.Enabled = false;
-
-                    // Re-enable other functions
-                    btnStartCalibration.Enabled = true;
-                    btnSet.Enabled = true;
-
-                    tl.LogMessage("BtnFinishBacklash_Click", "Backlash calibration finished successfully");
-                    AddToLog("INFO", "Backlash calibration completed and saved!");
-                    MessageBox.Show("Backlash calibration completed and saved!\n\nThe system will now compensate for backlash in all movements.", "Calibration Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-            }
-            catch (Exception ex)
-            {
-                tl.LogMessage("BtnFinishBacklash_Click", $"Error finishing backlash calibration: {ex.Message}");
-                AddToLog("ERR", $"Backlash calibration finish failed: {ex.Message}");
-                MessageBox.Show($"Error finishing backlash calibration: {ex.Message}", "Calibration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                // Reset button states on error
-                backlashCalibrationActive = false;
-                btnStartBacklash.Enabled = true;
-                btnBacklashStep.Enabled = false;
-                btnBacklashMark.Enabled = false;
-                btnFinishBacklash.Enabled = false;
-                btnStartCalibration.Enabled = true;
-                btnSet.Enabled = true;
-            }
-        }
 
         /// <summary>
         /// Gets the compilation date of the assembly
