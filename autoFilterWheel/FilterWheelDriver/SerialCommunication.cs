@@ -101,7 +101,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                     {
                         // Try a simple command to verify communication
                         serialPort.ClearBuffers();
-                        serialPort.Transmit("#VER\r");
+                        serialPort.Transmit("#VER\n");
 
                         // Wait for response with shorter timeout for initial test
                         string response = "";
@@ -288,9 +288,9 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
             string command = SerialCommands.CMD_MOVE_POSITION + position;
 
-            // MP command is blocking and can take up to 20 seconds for full rotation
-            // Use extended timeout (20 seconds) per ASCOM_COMMANDS.md recommendation
-            string response = SendCommand(command, 20000);
+            // MP command is blocking and can take up to 10 seconds for movement
+            // Use extended timeout (30 seconds) to give sufficient margin for slow movements
+            string response = SendCommand(command, 30000);
 
             // Verify the response
             if (!response.StartsWith(SerialCommands.RESP_MOVED + position))
@@ -512,26 +512,55 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         {
             try
             {
-                string response = serialPort.ReceiveCounted(1);
-                string fullResponse = response;
+                string fullResponse = "";
+                int consecutiveTimeouts = 0;
+                const int maxConsecutiveTimeouts = 3;
 
-                // Keep reading until we get a newline or timeout
+                // Keep reading until we get a newline or multiple timeouts
                 while (!fullResponse.Contains("\n") && !fullResponse.Contains("\r"))
                 {
-                    response = serialPort.ReceiveCounted(1);
-                    if (!string.IsNullOrEmpty(response))
+                    try
                     {
-                        fullResponse += response;
+                        string chunk = serialPort.ReceiveCounted(1);
+                        if (!string.IsNullOrEmpty(chunk))
+                        {
+                            fullResponse += chunk;
+                            consecutiveTimeouts = 0; // Reset timeout counter on successful read
+                        }
+                    }
+                    catch (TimeoutException)
+                    {
+                        // If we have some data and hit timeout, we're probably done
+                        if (fullResponse.Length > 0)
+                        {
+                            consecutiveTimeouts++;
+                            if (consecutiveTimeouts >= maxConsecutiveTimeouts)
+                            {
+                                tl.LogMessage("SerialCommunication.ReadResponse",
+                                    $"Read timeout after {fullResponse.Length} chars, assuming complete");
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            // No data yet, re-throw the timeout
+                            throw;
+                        }
                     }
 
-                    // Prevent infinite loop
-                    if (fullResponse.Length > SerialCommands.MAX_COMMAND_LENGTH)
+                    // Prevent infinite loop with excessive data
+                    if (fullResponse.Length > SerialCommands.MAX_COMMAND_LENGTH * 4)
                     {
+                        tl.LogMessage("SerialCommunication.ReadResponse",
+                            $"Response exceeded max length ({fullResponse.Length} chars), truncating");
                         break;
                     }
                 }
 
-                return fullResponse.Trim('\r', '\n', ' ');
+                string trimmed = fullResponse.Trim('\r', '\n', ' ');
+                tl.LogMessage("SerialCommunication.ReadResponse",
+                    $"Read {fullResponse.Length} chars, trimmed to {trimmed.Length}: '{trimmed}'");
+                return trimmed;
             }
             catch (Exception ex)
             {

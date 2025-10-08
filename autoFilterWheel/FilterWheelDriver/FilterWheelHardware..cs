@@ -415,7 +415,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         {
             get
             {
-                string description = "ESP32-C3 Motorized Filter Wheel Controller";
+                string description = "autoFilterWheel (ESP32-C3)";
                 LogMessage("Description Get", description);
                 return description;
             }
@@ -429,7 +429,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             get
             {
                 Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-                string driverInfo = $"ASCOM FilterWheel driver for ESP32-C3 controller. Version: {version.Major}.{version.Minor}. Supports {SerialCommands.MIN_FILTER_COUNT}-{SerialCommands.MAX_FILTER_COUNT} position filter wheel with serial communication. Compatible with firmware v2.0+";
+                string driverInfo = $"autoFilterWheel (ESP32-C3) - ASCOM FilterWheel driver. Version: {version.Major}.{version.Minor}. Supports {SerialCommands.MIN_FILTER_COUNT}-{SerialCommands.MAX_FILTER_COUNT} position filter wheel with serial communication. Compatible with firmware v2.0+";
                 LogMessage("DriverInfo Get", driverInfo);
                 return driverInfo;
             }
@@ -469,7 +469,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         {
             get
             {
-                string name = "ESP32 Filter Wheel";
+                string name = "autoFilterWheel";
                 LogMessage("Name Get", name);
                 return name;
             }
@@ -500,7 +500,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                             {
                                 try
                                 {
-                                    string status = serialComm.SendCommand("STATUS");
+                                    string status = serialComm.SendCommand(SerialCommands.CMD_STATUS);
                                     stateValues.Add(new KeyValuePair<string, object>("DeviceStatus", status));
                                 }
                                 catch

@@ -57,6 +57,14 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         public const string CMD_START_GUIDED_CAL = "CALSTART";    // Start guided calibration -> Returns: CALSTART:OK
         public const string CMD_CONFIRM_GUIDED_CAL = "CALCFM";    // Confirm guided calibration -> Returns: CALCFM:Complete
 
+        // Custom Angles Calibration Commands (New Firmware)
+        public const string CMD_CAL_WIZARD = "CALWIZ";            // Start calibration wizard -> Returns: CALWIZ:Wizard started...
+        public const string CMD_CAL_WIZARD_SET = "CALWIZSET";     // Set position in wizard (CALWIZSET1, CALWIZSET2, etc.) -> Returns: CALWIZSET1:OK (0.00°)...
+        public const string CMD_CAL_WIZARD_FINISH = "CALWIZFIN";  // Finish calibration wizard -> Returns: CALWIZFIN:Calibration complete! X positions saved.
+        public const string CMD_SET_ANGLE = "SETANG";             // Set custom angle (SETANG1:0.0, SETANG2:68.5, etc.) -> Returns: SETANG:Position X set to Y°
+        public const string CMD_GET_ANGLE = "GETANG";             // Get custom angle (GETANG1, GETANG2, or GETANG for all) -> Returns: GETANG1:0.00° (custom)
+        public const string CMD_CLEAR_ANGLES = "CLEARANG";        // Clear all custom angles -> Returns: CLEARANG:All custom angles cleared...
+
         // Utility Commands
         public const string CMD_HELP = "HELP";             // Show help -> Returns: (help text)
         public const string CMD_TEST_MOTOR = "TESTMOTOR";  // Test motor directly -> Returns: TESTMOTOR:Running...
@@ -95,7 +103,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         // Communication parameters
         public const int BAUD_RATE = 115200;
         public const int COMMAND_TIMEOUT_MS = 1000;
-        public const int MOVEMENT_TIMEOUT_MS = 10000;
+        public const int MOVEMENT_TIMEOUT_MS = 30000;  // 30 seconds for movements that can take up to 10 seconds
         public const int MAX_COMMAND_LENGTH = 50;
 
         // Filter wheel specifications (from firmware config.h)

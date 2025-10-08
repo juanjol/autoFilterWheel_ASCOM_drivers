@@ -20,6 +20,9 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         private Queue<string> logBuffer = new Queue<string>();
         private const int MAX_LOG_LINES = 1000;
 
+        // Custom Angles calibration control
+        private CustomAnglesControl customAnglesControl;
+
         public SetupDialogForm(TraceLogger tlDriver)
         {
             InitializeComponent();
@@ -174,14 +177,47 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // Initialize button states
             UpdateConnectionButtons(false);
 
-            // Set default values for calibration step comboboxes
-            comboBoxBackwardSteps.SelectedItem = "10";
-            comboBoxForwardSteps.SelectedItem = "10";
-
             // Set compilation date
             labelCompilationDate.Text = $"Built: {GetCompilationDate():yyyy-MM-dd HH:mm}";
 
+            // Initialize Custom Angles control
+            InitializeCustomAnglesTab();
+
+            // Set version in About tab
+            Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            labelVersion.Text = $"Version: {version.Major}.{version.Minor}.{version.Build}";
+
             tl.LogMessage("InitUI", $"Set UI controls to COM Port: {comboBoxComPort.SelectedItem}, Filter Count: {FilterWheelHardware.filterCount}");
+        }
+
+        private void InitializeCustomAnglesTab()
+        {
+            try
+            {
+                tl.LogMessage("InitializeCustomAnglesTab", "Starting initialization...");
+
+                // Create and configure the custom angles control
+                customAnglesControl = new CustomAnglesControl();
+                tl.LogMessage("InitializeCustomAnglesTab", "CustomAnglesControl created");
+
+                customAnglesControl.Dock = System.Windows.Forms.DockStyle.Fill;
+                tl.LogMessage("InitializeCustomAnglesTab", "Properties set");
+
+                // Add to the custom angles tab page
+                tabPageCustomAngles.Controls.Add(customAnglesControl);
+                tl.LogMessage("InitializeCustomAnglesTab", $"Control added to tab. Tab has {tabPageCustomAngles.Controls.Count} controls");
+
+                // Initialize with default values (will be updated when connected)
+                customAnglesControl.lblFilterCountValue.Text = FilterWheelHardware.filterCount.ToString();
+
+                tl.LogMessage("InitializeCustomAnglesTab", "Custom Angles tab initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("InitializeCustomAnglesTab", $"Error initializing Custom Angles tab: {ex.Message}");
+                tl.LogMessage("InitializeCustomAnglesTab", $"Stack trace: {ex.StackTrace}");
+                MessageBox.Show($"Error al inicializar Custom Angles tab: {ex.Message}\n\nStack: {ex.StackTrace}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void SetupDialogForm_Load(object sender, EventArgs e)
@@ -257,11 +293,6 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             btnReloadFilterNames.Enabled = connected;
             comboBoxComPort.Enabled = !connected;
 
-            // Enable calibration buttons only when connected
-            btnMoveBackward.Enabled = connected;
-            btnSetToPos1.Enabled = connected;
-            btnMoveForward.Enabled = connected;
-
             // Enable filter selection only when connected
             btnSelectFilter.Enabled = connected;
         }
@@ -293,6 +324,13 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                     // Retrieve filter count and names from device
                     RetrieveFilterConfiguration();
 
+                    // Initialize custom angles control with connection
+                    if (customAnglesControl != null)
+                    {
+                        customAnglesControl.Initialize(serialComm, tl, FilterWheelHardware.filterCount, SendCommandWithLog);
+                        customAnglesControl.UpdateConnectionState(true);
+                    }
+
                     UpdateConnectionButtons(true);
                 }
             }
@@ -308,6 +346,12 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         {
             try
             {
+                // Update custom angles connection state
+                if (customAnglesControl != null)
+                {
+                    customAnglesControl.UpdateConnectionState(false);
+                }
+
                 if (serialComm != null && serialComm.IsConnected)
                 {
                     serialComm.Disconnect();
@@ -541,7 +585,8 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                     tl.LogMessage("BtnSelectFilter_Click", $"Moving to filter position {position}");
                     AddToLog("INFO", $"Moving to filter position {position}...");
 
-                    string response = SendCommandWithLog(command);
+                    // Use extended timeout for movement command (can take up to 10 seconds)
+                    string response = SendCommandWithLog(command, SerialCommands.MOVEMENT_TIMEOUT_MS);
 
                     tl.LogMessage("BtnSelectFilter_Click", $"Response: {response}");
                     AddToLog("INFO", $"Moved to filter position {position}");
@@ -555,103 +600,6 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 MessageBox.Show($"Error selecting filter: {ex.Message}", "Selection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-
-        private void BtnMoveBackward_Click(object sender, EventArgs e)
-        {
-            if (!serialComm.IsConnected)
-            {
-                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (comboBoxBackwardSteps.SelectedItem == null)
-            {
-                MessageBox.Show("Please select number of steps.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            try
-            {
-                string steps = comboBoxBackwardSteps.SelectedItem.ToString();
-                string command = $"SB{steps}";
-                tl.LogMessage("BtnMoveBackward_Click", $"Sending command: {command}");
-                AddToLog("INFO", $"Moving backward {steps} steps...");
-
-                string response = SendCommandWithLog(command);
-
-                tl.LogMessage("BtnMoveBackward_Click", $"Response: {response}");
-                AddToLog("INFO", $"Moved backward {steps} steps");
-            }
-            catch (Exception ex)
-            {
-                tl.LogMessage("BtnMoveBackward_Click", $"Error: {ex.Message}");
-                AddToLog("ERR", $"Move backward failed: {ex.Message}");
-                MessageBox.Show($"Error moving backward: {ex.Message}", "Movement Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void BtnSetToPos1_Click(object sender, EventArgs e)
-        {
-            if (!serialComm.IsConnected)
-            {
-                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            try
-            {
-                tl.LogMessage("BtnSetToPos1_Click", "Sending CAL command");
-                AddToLog("INFO", "Setting position to 1 (calibrating)...");
-
-                string response = SendCommandWithLog("CAL");
-
-                tl.LogMessage("BtnSetToPos1_Click", $"Response: {response}");
-                AddToLog("INFO", "Position set to 1 - Calibration complete!");
-                MessageBox.Show("Position set to 1!\n\nThe current position is now registered as filter position 1.", "Calibration Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception ex)
-            {
-                tl.LogMessage("BtnSetToPos1_Click", $"Error: {ex.Message}");
-                AddToLog("ERR", $"Calibration failed: {ex.Message}");
-                MessageBox.Show($"Error during calibration: {ex.Message}", "Calibration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void BtnMoveForward_Click(object sender, EventArgs e)
-        {
-            if (!serialComm.IsConnected)
-            {
-                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (comboBoxForwardSteps.SelectedItem == null)
-            {
-                MessageBox.Show("Please select number of steps.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            try
-            {
-                string steps = comboBoxForwardSteps.SelectedItem.ToString();
-                string command = $"SF{steps}";
-                tl.LogMessage("BtnMoveForward_Click", $"Sending command: {command}");
-                AddToLog("INFO", $"Moving forward {steps} steps...");
-
-                string response = SendCommandWithLog(command);
-
-                tl.LogMessage("BtnMoveForward_Click", $"Response: {response}");
-                AddToLog("INFO", $"Moved forward {steps} steps");
-            }
-            catch (Exception ex)
-            {
-                tl.LogMessage("BtnMoveForward_Click", $"Error: {ex.Message}");
-                AddToLog("ERR", $"Move forward failed: {ex.Message}");
-                MessageBox.Show($"Error moving forward: {ex.Message}", "Movement Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
 
         /// <summary>
         /// Gets the compilation date of the assembly
@@ -676,6 +624,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
         /// <summary>
         /// Adds a message to the communication log
+        /// Implements smart auto-scroll: follows log if at bottom, stops if user scrolled up
         /// </summary>
         private void AddToLog(string direction, string message)
         {
@@ -700,10 +649,20 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // Update textbox
             if (textBoxLog != null)
             {
+                // Check if user was viewing the bottom before adding new text
+                // We consider "at bottom" if the selection/cursor is within the last 100 characters
+                bool wasAtBottom = (textBoxLog.SelectionStart >= textBoxLog.Text.Length - 100);
+
+                // Update text
                 textBoxLog.Text = string.Join(Environment.NewLine, logBuffer);
-                // Scroll to bottom
-                textBoxLog.SelectionStart = textBoxLog.Text.Length;
-                textBoxLog.ScrollToCaret();
+
+                // Only auto-scroll if user was at the bottom
+                if (wasAtBottom)
+                {
+                    textBoxLog.SelectionStart = textBoxLog.Text.Length;
+                    textBoxLog.ScrollToCaret();
+                }
+                // If user scrolled up manually, don't auto-scroll (let them read)
             }
         }
 
@@ -730,10 +689,18 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         /// </summary>
         private string SendCommandWithLog(string command)
         {
+            return SendCommandWithLog(command, SerialCommands.COMMAND_TIMEOUT_MS);
+        }
+
+        /// <summary>
+        /// Send command with logging and custom timeout
+        /// </summary>
+        private string SendCommandWithLog(string command, int timeoutMs)
+        {
             AddToLog("TX", command);
             try
             {
-                string response = serialComm.SendCommand(command);
+                string response = serialComm.SendCommand(command, timeoutMs);
                 AddToLog("RX", response);
                 return response;
             }
@@ -741,6 +708,54 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             {
                 AddToLog("ERR", ex.Message);
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Open Driver Repository link
+        /// </summary>
+        private void LinkLabelDriverRepo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start("https://github.com/juanjol/autoFilterWheel_ASCOM_drivers");
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("LinkLabelDriverRepo_LinkClicked", $"Error opening link: {ex.Message}");
+                MessageBox.Show($"Could not open link: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Open Firmware Repository link
+        /// </summary>
+        private void LinkLabelFirmwareRepo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start("https://github.com/juanjol/autoFilterWheel");
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("LinkLabelFirmwareRepo_LinkClicked", $"Error opening link: {ex.Message}");
+                MessageBox.Show($"Could not open link: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Open GitHub profile link
+        /// </summary>
+        private void LinkLabelGitHub_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start("https://github.com/juanjol");
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("LinkLabelGitHub_LinkClicked", $"Error opening link: {ex.Message}");
+                MessageBox.Show($"Could not open link: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

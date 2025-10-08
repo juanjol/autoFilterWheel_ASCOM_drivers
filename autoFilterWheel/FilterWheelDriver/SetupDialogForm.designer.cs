@@ -106,13 +106,22 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.numericMotorSpeed = new System.Windows.Forms.NumericUpDown();
             this.labelMotorSpeed = new System.Windows.Forms.Label();
             this.labelStepsPerRev = new System.Windows.Forms.Label();
-            this.tabPageCalibration = new System.Windows.Forms.TabPage();
-            this.groupBoxCalibration = new System.Windows.Forms.GroupBox();
-            this.comboBoxBackwardSteps = new System.Windows.Forms.ComboBox();
-            this.btnMoveBackward = new System.Windows.Forms.Button();
-            this.btnSetToPos1 = new System.Windows.Forms.Button();
-            this.comboBoxForwardSteps = new System.Windows.Forms.ComboBox();
-            this.btnMoveForward = new System.Windows.Forms.Button();
+            this.tabPageCustomAngles = new System.Windows.Forms.TabPage();
+            this.tabPageDisplay = new System.Windows.Forms.TabPage();
+            this.groupBoxDisplayRotation = new System.Windows.Forms.GroupBox();
+            this.btnSetDisplayRotation = new System.Windows.Forms.Button();
+            this.radioDisplayInverted = new System.Windows.Forms.RadioButton();
+            this.radioDisplayNormal = new System.Windows.Forms.RadioButton();
+            this.tabPageLog = new System.Windows.Forms.TabPage();
+            this.textBoxLog = new System.Windows.Forms.TextBox();
+            this.tabPageAbout = new System.Windows.Forms.TabPage();
+            this.linkLabelGitHub = new System.Windows.Forms.LinkLabel();
+            this.linkLabelFirmwareRepo = new System.Windows.Forms.LinkLabel();
+            this.linkLabelDriverRepo = new System.Windows.Forms.LinkLabel();
+            this.labelAuthor = new System.Windows.Forms.Label();
+            this.labelVersion = new System.Windows.Forms.Label();
+            this.labelAboutDescription = new System.Windows.Forms.Label();
+            this.labelAboutTitle = new System.Windows.Forms.Label();
             this.tabPageManualControl = new System.Windows.Forms.TabPage();
             this.groupBoxStepping = new System.Windows.Forms.GroupBox();
             this.btnGetCurrentStep = new System.Windows.Forms.Button();
@@ -123,13 +132,6 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.numericStepAmount = new System.Windows.Forms.NumericUpDown();
             this.labelStepAmount = new System.Windows.Forms.Label();
             this.btnEmergencyStop = new System.Windows.Forms.Button();
-            this.tabPageDisplay = new System.Windows.Forms.TabPage();
-            this.groupBoxDisplayRotation = new System.Windows.Forms.GroupBox();
-            this.btnSetDisplayRotation = new System.Windows.Forms.Button();
-            this.radioDisplayInverted = new System.Windows.Forms.RadioButton();
-            this.radioDisplayNormal = new System.Windows.Forms.RadioButton();
-            this.tabPageLog = new System.Windows.Forms.TabPage();
-            this.textBoxLog = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.picASCOM)).BeginInit();
             this.tabControl.SuspendLayout();
             this.tabPageConfiguration.SuspendLayout();
@@ -140,20 +142,20 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             ((System.ComponentModel.ISupportInitialize)(this.numericAcceleration)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericMaxSpeed)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericMotorSpeed)).BeginInit();
-            this.tabPageCalibration.SuspendLayout();
-            this.groupBoxCalibration.SuspendLayout();
-            this.groupBoxStepping.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numericStepAmount)).BeginInit();
             this.tabPageDisplay.SuspendLayout();
             this.groupBoxDisplayRotation.SuspendLayout();
             this.tabPageLog.SuspendLayout();
+            this.tabPageAbout.SuspendLayout();
+            this.tabPageManualControl.SuspendLayout();
+            this.groupBoxStepping.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericStepAmount)).BeginInit();
             this.SuspendLayout();
             // 
             // cmdOK
             // 
             this.cmdOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.cmdOK.Location = new System.Drawing.Point(513, 340);
+            this.cmdOK.Location = new System.Drawing.Point(513, 459);
             this.cmdOK.Name = "cmdOK";
             this.cmdOK.Size = new System.Drawing.Size(59, 24);
             this.cmdOK.TabIndex = 0;
@@ -165,7 +167,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // 
             this.cmdCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cmdCancel.Location = new System.Drawing.Point(448, 340);
+            this.cmdCancel.Location = new System.Drawing.Point(448, 459);
             this.cmdCancel.Name = "cmdCancel";
             this.cmdCancel.Size = new System.Drawing.Size(59, 24);
             this.cmdCancel.TabIndex = 1;
@@ -205,14 +207,14 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.comboBoxComPort.TabIndex = 7;
             // 
             // btnRefreshPorts
-            // 
-            this.btnRefreshPorts.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            //
+            this.btnRefreshPorts.Font = new System.Drawing.Font("Segoe UI Symbol", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnRefreshPorts.Location = new System.Drawing.Point(162, 8);
             this.btnRefreshPorts.Margin = new System.Windows.Forms.Padding(0);
             this.btnRefreshPorts.Name = "btnRefreshPorts";
             this.btnRefreshPorts.Size = new System.Drawing.Size(25, 24);
             this.btnRefreshPorts.TabIndex = 8;
-            this.btnRefreshPorts.Text = "↻";
+            this.btnRefreshPorts.Text = "🔄";
             this.btnRefreshPorts.UseVisualStyleBackColor = true;
             this.btnRefreshPorts.Click += new System.EventHandler(this.BtnRefreshPorts_Click);
             // 
@@ -273,7 +275,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.labelCompilationDate.AutoSize = true;
             this.labelCompilationDate.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelCompilationDate.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.labelCompilationDate.Location = new System.Drawing.Point(16, 343);
+            this.labelCompilationDate.Location = new System.Drawing.Point(8, 466);
             this.labelCompilationDate.Name = "labelCompilationDate";
             this.labelCompilationDate.Size = new System.Drawing.Size(148, 13);
             this.labelCompilationDate.TabIndex = 29;
@@ -317,16 +319,17 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.panelSeparator.TabIndex = 43;
             // 
             // tabControl
-            //
+            // 
             this.tabControl.Controls.Add(this.tabPageConfiguration);
             this.tabControl.Controls.Add(this.tabPageMotorConfig);
-            this.tabControl.Controls.Add(this.tabPageCalibration);
+            this.tabControl.Controls.Add(this.tabPageCustomAngles);
             this.tabControl.Controls.Add(this.tabPageDisplay);
             this.tabControl.Controls.Add(this.tabPageLog);
+            this.tabControl.Controls.Add(this.tabPageAbout);
             this.tabControl.Location = new System.Drawing.Point(11, 82);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
-            this.tabControl.Size = new System.Drawing.Size(564, 250);
+            this.tabControl.Size = new System.Drawing.Size(564, 371);
             this.tabControl.TabIndex = 30;
             // 
             // tabPageConfiguration
@@ -357,7 +360,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.tabPageConfiguration.Location = new System.Drawing.Point(4, 22);
             this.tabPageConfiguration.Name = "tabPageConfiguration";
             this.tabPageConfiguration.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageConfiguration.Size = new System.Drawing.Size(556, 224);
+            this.tabPageConfiguration.Size = new System.Drawing.Size(556, 345);
             this.tabPageConfiguration.TabIndex = 0;
             this.tabPageConfiguration.Text = "Filter Configuration";
             this.tabPageConfiguration.UseVisualStyleBackColor = true;
@@ -567,7 +570,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.tabPageMotorConfig.Location = new System.Drawing.Point(4, 22);
             this.tabPageMotorConfig.Name = "tabPageMotorConfig";
             this.tabPageMotorConfig.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageMotorConfig.Size = new System.Drawing.Size(556, 224);
+            this.tabPageMotorConfig.Size = new System.Drawing.Size(556, 345);
             this.tabPageMotorConfig.TabIndex = 2;
             this.tabPageMotorConfig.Text = "Motor Configuration";
             this.tabPageMotorConfig.UseVisualStyleBackColor = true;
@@ -779,97 +782,185 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.labelStepsPerRev.TabIndex = 8;
             this.labelStepsPerRev.Text = "Steps/Rev:";
             // 
-            // tabPageCalibration
+            // tabPageCustomAngles
             // 
-            this.tabPageCalibration.Controls.Add(this.groupBoxCalibration);
-            this.tabPageCalibration.Location = new System.Drawing.Point(4, 22);
-            this.tabPageCalibration.Name = "tabPageCalibration";
-            this.tabPageCalibration.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageCalibration.Size = new System.Drawing.Size(556, 224);
-            this.tabPageCalibration.TabIndex = 1;
-            this.tabPageCalibration.Text = "Calibration";
-            this.tabPageCalibration.UseVisualStyleBackColor = true;
+            this.tabPageCustomAngles.Location = new System.Drawing.Point(4, 22);
+            this.tabPageCustomAngles.Name = "tabPageCustomAngles";
+            this.tabPageCustomAngles.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageCustomAngles.Size = new System.Drawing.Size(556, 345);
+            this.tabPageCustomAngles.TabIndex = 6;
+            this.tabPageCustomAngles.Text = "Calibration";
+            this.tabPageCustomAngles.UseVisualStyleBackColor = true;
             // 
-            // groupBoxCalibration
+            // tabPageDisplay
             // 
-            this.groupBoxCalibration.Controls.Add(this.comboBoxBackwardSteps);
-            this.groupBoxCalibration.Controls.Add(this.btnMoveBackward);
-            this.groupBoxCalibration.Controls.Add(this.btnSetToPos1);
-            this.groupBoxCalibration.Controls.Add(this.comboBoxForwardSteps);
-            this.groupBoxCalibration.Controls.Add(this.btnMoveForward);
-            this.groupBoxCalibration.Location = new System.Drawing.Point(10, 10);
-            this.groupBoxCalibration.Name = "groupBoxCalibration";
-            this.groupBoxCalibration.Size = new System.Drawing.Size(540, 90);
-            this.groupBoxCalibration.TabIndex = 30;
-            this.groupBoxCalibration.TabStop = false;
-            this.groupBoxCalibration.Text = "Manual Calibration";
+            this.tabPageDisplay.Controls.Add(this.groupBoxDisplayRotation);
+            this.tabPageDisplay.Location = new System.Drawing.Point(4, 22);
+            this.tabPageDisplay.Name = "tabPageDisplay";
+            this.tabPageDisplay.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageDisplay.Size = new System.Drawing.Size(556, 345);
+            this.tabPageDisplay.TabIndex = 5;
+            this.tabPageDisplay.Text = "Display Configuration";
+            this.tabPageDisplay.UseVisualStyleBackColor = true;
             // 
-            // comboBoxBackwardSteps
+            // groupBoxDisplayRotation
             // 
-            this.comboBoxBackwardSteps.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxBackwardSteps.FormattingEnabled = true;
-            this.comboBoxBackwardSteps.Items.AddRange(new object[] {
-            "1",
-            "5",
-            "10",
-            "20",
-            "50",
-            "100",
-            "200"});
-            this.comboBoxBackwardSteps.Location = new System.Drawing.Point(126, 38);
-            this.comboBoxBackwardSteps.Name = "comboBoxBackwardSteps";
-            this.comboBoxBackwardSteps.Size = new System.Drawing.Size(70, 21);
-            this.comboBoxBackwardSteps.TabIndex = 31;
+            this.groupBoxDisplayRotation.Controls.Add(this.btnSetDisplayRotation);
+            this.groupBoxDisplayRotation.Controls.Add(this.radioDisplayInverted);
+            this.groupBoxDisplayRotation.Controls.Add(this.radioDisplayNormal);
+            this.groupBoxDisplayRotation.Location = new System.Drawing.Point(10, 10);
+            this.groupBoxDisplayRotation.Name = "groupBoxDisplayRotation";
+            this.groupBoxDisplayRotation.Size = new System.Drawing.Size(540, 60);
+            this.groupBoxDisplayRotation.TabIndex = 0;
+            this.groupBoxDisplayRotation.TabStop = false;
+            this.groupBoxDisplayRotation.Text = "Display Rotation";
             // 
-            // btnMoveBackward
+            // btnSetDisplayRotation
             // 
-            this.btnMoveBackward.Enabled = false;
-            this.btnMoveBackward.Location = new System.Drawing.Point(10, 30);
-            this.btnMoveBackward.Name = "btnMoveBackward";
-            this.btnMoveBackward.Size = new System.Drawing.Size(110, 33);
-            this.btnMoveBackward.TabIndex = 32;
-            this.btnMoveBackward.Text = "Move Backward";
-            this.btnMoveBackward.UseVisualStyleBackColor = true;
-            this.btnMoveBackward.Click += new System.EventHandler(this.BtnMoveBackward_Click);
+            this.btnSetDisplayRotation.Enabled = false;
+            this.btnSetDisplayRotation.Location = new System.Drawing.Point(200, 20);
+            this.btnSetDisplayRotation.Name = "btnSetDisplayRotation";
+            this.btnSetDisplayRotation.Size = new System.Drawing.Size(75, 25);
+            this.btnSetDisplayRotation.TabIndex = 3;
+            this.btnSetDisplayRotation.Text = "Apply";
+            this.btnSetDisplayRotation.UseVisualStyleBackColor = true;
             // 
-            // btnSetToPos1
+            // radioDisplayInverted
             // 
-            this.btnSetToPos1.Enabled = false;
-            this.btnSetToPos1.Location = new System.Drawing.Point(220, 30);
-            this.btnSetToPos1.Name = "btnSetToPos1";
-            this.btnSetToPos1.Size = new System.Drawing.Size(100, 40);
-            this.btnSetToPos1.TabIndex = 33;
-            this.btnSetToPos1.Text = "Set to Pos 1";
-            this.btnSetToPos1.UseVisualStyleBackColor = true;
-            this.btnSetToPos1.Click += new System.EventHandler(this.BtnSetToPos1_Click);
+            this.radioDisplayInverted.AutoSize = true;
+            this.radioDisplayInverted.Location = new System.Drawing.Point(80, 25);
+            this.radioDisplayInverted.Name = "radioDisplayInverted";
+            this.radioDisplayInverted.Size = new System.Drawing.Size(95, 17);
+            this.radioDisplayInverted.TabIndex = 1;
+            this.radioDisplayInverted.Text = "Inverted (180°)";
+            this.radioDisplayInverted.UseVisualStyleBackColor = true;
             // 
-            // comboBoxForwardSteps
+            // radioDisplayNormal
             // 
-            this.comboBoxForwardSteps.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxForwardSteps.FormattingEnabled = true;
-            this.comboBoxForwardSteps.Items.AddRange(new object[] {
-            "1",
-            "5",
-            "10",
-            "20",
-            "50",
-            "100",
-            "200"});
-            this.comboBoxForwardSteps.Location = new System.Drawing.Point(344, 38);
-            this.comboBoxForwardSteps.Name = "comboBoxForwardSteps";
-            this.comboBoxForwardSteps.Size = new System.Drawing.Size(70, 21);
-            this.comboBoxForwardSteps.TabIndex = 34;
+            this.radioDisplayNormal.AutoSize = true;
+            this.radioDisplayNormal.Checked = true;
+            this.radioDisplayNormal.Location = new System.Drawing.Point(10, 25);
+            this.radioDisplayNormal.Name = "radioDisplayNormal";
+            this.radioDisplayNormal.Size = new System.Drawing.Size(58, 17);
+            this.radioDisplayNormal.TabIndex = 0;
+            this.radioDisplayNormal.TabStop = true;
+            this.radioDisplayNormal.Text = "Normal";
+            this.radioDisplayNormal.UseVisualStyleBackColor = true;
             // 
-            // btnMoveForward
+            // tabPageLog
             // 
-            this.btnMoveForward.Enabled = false;
-            this.btnMoveForward.Location = new System.Drawing.Point(420, 30);
-            this.btnMoveForward.Name = "btnMoveForward";
-            this.btnMoveForward.Size = new System.Drawing.Size(110, 33);
-            this.btnMoveForward.TabIndex = 35;
-            this.btnMoveForward.Text = "Move Forward";
-            this.btnMoveForward.UseVisualStyleBackColor = true;
-            this.btnMoveForward.Click += new System.EventHandler(this.BtnMoveForward_Click);
+            this.tabPageLog.Controls.Add(this.textBoxLog);
+            this.tabPageLog.Location = new System.Drawing.Point(4, 22);
+            this.tabPageLog.Name = "tabPageLog";
+            this.tabPageLog.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageLog.Size = new System.Drawing.Size(556, 345);
+            this.tabPageLog.TabIndex = 2;
+            this.tabPageLog.Text = "Communication Log";
+            this.tabPageLog.UseVisualStyleBackColor = true;
+            // 
+            // textBoxLog
+            // 
+            this.textBoxLog.BackColor = System.Drawing.Color.Black;
+            this.textBoxLog.Font = new System.Drawing.Font("Consolas", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBoxLog.ForeColor = System.Drawing.Color.LimeGreen;
+            this.textBoxLog.Location = new System.Drawing.Point(6, 6);
+            this.textBoxLog.Multiline = true;
+            this.textBoxLog.Name = "textBoxLog";
+            this.textBoxLog.ReadOnly = true;
+            this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.textBoxLog.Size = new System.Drawing.Size(547, 333);
+            this.textBoxLog.TabIndex = 0;
+            this.textBoxLog.WordWrap = false;
+            // 
+            // tabPageAbout
+            // 
+            this.tabPageAbout.Controls.Add(this.linkLabelGitHub);
+            this.tabPageAbout.Controls.Add(this.linkLabelFirmwareRepo);
+            this.tabPageAbout.Controls.Add(this.linkLabelDriverRepo);
+            this.tabPageAbout.Controls.Add(this.labelAuthor);
+            this.tabPageAbout.Controls.Add(this.labelVersion);
+            this.tabPageAbout.Controls.Add(this.labelAboutDescription);
+            this.tabPageAbout.Controls.Add(this.labelAboutTitle);
+            this.tabPageAbout.Location = new System.Drawing.Point(4, 22);
+            this.tabPageAbout.Name = "tabPageAbout";
+            this.tabPageAbout.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageAbout.Size = new System.Drawing.Size(556, 345);
+            this.tabPageAbout.TabIndex = 7;
+            this.tabPageAbout.Text = "About";
+            this.tabPageAbout.UseVisualStyleBackColor = true;
+            // 
+            // linkLabelGitHub
+            // 
+            this.linkLabelGitHub.AutoSize = true;
+            this.linkLabelGitHub.Location = new System.Drawing.Point(20, 195);
+            this.linkLabelGitHub.Name = "linkLabelGitHub";
+            this.linkLabelGitHub.Size = new System.Drawing.Size(179, 13);
+            this.linkLabelGitHub.TabIndex = 6;
+            this.linkLabelGitHub.TabStop = true;
+            this.linkLabelGitHub.Text = "My Github profile: github.com/juanjol";
+            this.linkLabelGitHub.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelGitHub_LinkClicked);
+            // 
+            // linkLabelFirmwareRepo
+            // 
+            this.linkLabelFirmwareRepo.AutoSize = true;
+            this.linkLabelFirmwareRepo.Location = new System.Drawing.Point(20, 175);
+            this.linkLabelFirmwareRepo.Name = "linkLabelFirmwareRepo";
+            this.linkLabelFirmwareRepo.Size = new System.Drawing.Size(102, 13);
+            this.linkLabelFirmwareRepo.TabIndex = 5;
+            this.linkLabelFirmwareRepo.TabStop = true;
+            this.linkLabelFirmwareRepo.Text = "Firmware Repository";
+            this.linkLabelFirmwareRepo.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelFirmwareRepo_LinkClicked);
+            // 
+            // linkLabelDriverRepo
+            // 
+            this.linkLabelDriverRepo.AutoSize = true;
+            this.linkLabelDriverRepo.Location = new System.Drawing.Point(20, 155);
+            this.linkLabelDriverRepo.Name = "linkLabelDriverRepo";
+            this.linkLabelDriverRepo.Size = new System.Drawing.Size(88, 13);
+            this.linkLabelDriverRepo.TabIndex = 4;
+            this.linkLabelDriverRepo.TabStop = true;
+            this.linkLabelDriverRepo.Text = "Driver Repository";
+            this.linkLabelDriverRepo.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelDriverRepo_LinkClicked);
+            // 
+            // labelAuthor
+            // 
+            this.labelAuthor.AutoSize = true;
+            this.labelAuthor.Location = new System.Drawing.Point(20, 115);
+            this.labelAuthor.Name = "labelAuthor";
+            this.labelAuthor.Size = new System.Drawing.Size(107, 13);
+            this.labelAuthor.TabIndex = 3;
+            this.labelAuthor.Text = "Author: Juanjo López";
+            // 
+            // labelVersion
+            // 
+            this.labelVersion.AutoSize = true;
+            this.labelVersion.Location = new System.Drawing.Point(20, 95);
+            this.labelVersion.Name = "labelVersion";
+            this.labelVersion.Size = new System.Drawing.Size(88, 13);
+            this.labelVersion.TabIndex = 2;
+            this.labelVersion.Text = "Version: [version]";
+            // 
+            // labelAboutDescription
+            // 
+            this.labelAboutDescription.AutoSize = true;
+            this.labelAboutDescription.Location = new System.Drawing.Point(20, 55);
+            this.labelAboutDescription.MaximumSize = new System.Drawing.Size(500, 0);
+            this.labelAboutDescription.Name = "labelAboutDescription";
+            this.labelAboutDescription.Size = new System.Drawing.Size(484, 26);
+            this.labelAboutDescription.TabIndex = 1;
+            this.labelAboutDescription.Text = "ASCOM FilterWheel driver for ESP32-C3 based motorized filter wheel controller. Su" +
+    "pports 3-9 position filter wheels with magnetic encoder feedback and custom angl" +
+    "e calibration.";
+            // 
+            // labelAboutTitle
+            // 
+            this.labelAboutTitle.AutoSize = true;
+            this.labelAboutTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelAboutTitle.Location = new System.Drawing.Point(20, 20);
+            this.labelAboutTitle.Name = "labelAboutTitle";
+            this.labelAboutTitle.Size = new System.Drawing.Size(271, 24);
+            this.labelAboutTitle.TabIndex = 0;
+            this.labelAboutTitle.Text = "autoFilterWheel (ESP32-C3)";
             // 
             // tabPageManualControl
             // 
@@ -992,91 +1083,11 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             this.btnEmergencyStop.Text = "EMERGENCY STOP";
             this.btnEmergencyStop.UseVisualStyleBackColor = false;
             // 
-            // tabPageDisplay
-            // 
-            this.tabPageDisplay.Controls.Add(this.groupBoxDisplayRotation);
-            this.tabPageDisplay.Location = new System.Drawing.Point(4, 22);
-            this.tabPageDisplay.Name = "tabPageDisplay";
-            this.tabPageDisplay.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageDisplay.Size = new System.Drawing.Size(556, 224);
-            this.tabPageDisplay.TabIndex = 5;
-            this.tabPageDisplay.Text = "Display Configuration";
-            this.tabPageDisplay.UseVisualStyleBackColor = true;
-            // 
-            // groupBoxDisplayRotation
-            // 
-            this.groupBoxDisplayRotation.Controls.Add(this.btnSetDisplayRotation);
-            this.groupBoxDisplayRotation.Controls.Add(this.radioDisplayInverted);
-            this.groupBoxDisplayRotation.Controls.Add(this.radioDisplayNormal);
-            this.groupBoxDisplayRotation.Location = new System.Drawing.Point(10, 10);
-            this.groupBoxDisplayRotation.Name = "groupBoxDisplayRotation";
-            this.groupBoxDisplayRotation.Size = new System.Drawing.Size(540, 60);
-            this.groupBoxDisplayRotation.TabIndex = 0;
-            this.groupBoxDisplayRotation.TabStop = false;
-            this.groupBoxDisplayRotation.Text = "Display Rotation";
-            // 
-            // btnSetDisplayRotation
-            // 
-            this.btnSetDisplayRotation.Enabled = false;
-            this.btnSetDisplayRotation.Location = new System.Drawing.Point(200, 20);
-            this.btnSetDisplayRotation.Name = "btnSetDisplayRotation";
-            this.btnSetDisplayRotation.Size = new System.Drawing.Size(75, 25);
-            this.btnSetDisplayRotation.TabIndex = 3;
-            this.btnSetDisplayRotation.Text = "Apply";
-            this.btnSetDisplayRotation.UseVisualStyleBackColor = true;
-            // 
-            // radioDisplayInverted
-            // 
-            this.radioDisplayInverted.AutoSize = true;
-            this.radioDisplayInverted.Location = new System.Drawing.Point(80, 25);
-            this.radioDisplayInverted.Name = "radioDisplayInverted";
-            this.radioDisplayInverted.Size = new System.Drawing.Size(95, 17);
-            this.radioDisplayInverted.TabIndex = 1;
-            this.radioDisplayInverted.Text = "Inverted (180°)";
-            this.radioDisplayInverted.UseVisualStyleBackColor = true;
-            // 
-            // radioDisplayNormal
-            // 
-            this.radioDisplayNormal.AutoSize = true;
-            this.radioDisplayNormal.Checked = true;
-            this.radioDisplayNormal.Location = new System.Drawing.Point(10, 25);
-            this.radioDisplayNormal.Name = "radioDisplayNormal";
-            this.radioDisplayNormal.Size = new System.Drawing.Size(58, 17);
-            this.radioDisplayNormal.TabIndex = 0;
-            this.radioDisplayNormal.TabStop = true;
-            this.radioDisplayNormal.Text = "Normal";
-            this.radioDisplayNormal.UseVisualStyleBackColor = true;
-            // 
-            // tabPageLog
-            // 
-            this.tabPageLog.Controls.Add(this.textBoxLog);
-            this.tabPageLog.Location = new System.Drawing.Point(4, 22);
-            this.tabPageLog.Name = "tabPageLog";
-            this.tabPageLog.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageLog.Size = new System.Drawing.Size(556, 224);
-            this.tabPageLog.TabIndex = 2;
-            this.tabPageLog.Text = "Communication Log";
-            this.tabPageLog.UseVisualStyleBackColor = true;
-            // 
-            // textBoxLog
-            // 
-            this.textBoxLog.BackColor = System.Drawing.Color.Black;
-            this.textBoxLog.Font = new System.Drawing.Font("Consolas", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBoxLog.ForeColor = System.Drawing.Color.LimeGreen;
-            this.textBoxLog.Location = new System.Drawing.Point(6, 6);
-            this.textBoxLog.Multiline = true;
-            this.textBoxLog.Name = "textBoxLog";
-            this.textBoxLog.ReadOnly = true;
-            this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxLog.Size = new System.Drawing.Size(547, 215);
-            this.textBoxLog.TabIndex = 0;
-            this.textBoxLog.WordWrap = false;
-            // 
             // SetupDialogForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(589, 376);
+            this.ClientSize = new System.Drawing.Size(589, 495);
             this.Controls.Add(this.tabControl);
             this.Controls.Add(this.panelSeparator);
             this.Controls.Add(this.btnSelectFilter);
@@ -1113,17 +1124,17 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             ((System.ComponentModel.ISupportInitialize)(this.numericAcceleration)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericMaxSpeed)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericMotorSpeed)).EndInit();
-            this.tabPageCalibration.ResumeLayout(false);
-            this.groupBoxCalibration.ResumeLayout(false);
-            this.tabPageManualControl.ResumeLayout(false);
-            this.groupBoxStepping.ResumeLayout(false);
-            this.groupBoxStepping.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numericStepAmount)).EndInit();
             this.tabPageDisplay.ResumeLayout(false);
             this.groupBoxDisplayRotation.ResumeLayout(false);
             this.groupBoxDisplayRotation.PerformLayout();
             this.tabPageLog.ResumeLayout(false);
             this.tabPageLog.PerformLayout();
+            this.tabPageAbout.ResumeLayout(false);
+            this.tabPageAbout.PerformLayout();
+            this.tabPageManualControl.ResumeLayout(false);
+            this.groupBoxStepping.ResumeLayout(false);
+            this.groupBoxStepping.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericStepAmount)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1152,15 +1163,17 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         private System.Windows.Forms.TabPage tabPageConfiguration;
         private System.Windows.Forms.TabPage tabPageMotorConfig;
         private System.Windows.Forms.TabPage tabPageManualControl;
-        private System.Windows.Forms.TabPage tabPageCalibration;
+        private System.Windows.Forms.TabPage tabPageCustomAngles;
         private System.Windows.Forms.TabPage tabPageLog;
         private System.Windows.Forms.TextBox textBoxLog;
-        private System.Windows.Forms.GroupBox groupBoxCalibration;
-        private System.Windows.Forms.ComboBox comboBoxBackwardSteps;
-        private System.Windows.Forms.Button btnMoveBackward;
-        private System.Windows.Forms.Button btnSetToPos1;
-        private System.Windows.Forms.ComboBox comboBoxForwardSteps;
-        private System.Windows.Forms.Button btnMoveForward;
+        private System.Windows.Forms.TabPage tabPageAbout;
+        private System.Windows.Forms.Label labelAboutTitle;
+        private System.Windows.Forms.Label labelAboutDescription;
+        private System.Windows.Forms.Label labelVersion;
+        private System.Windows.Forms.Label labelAuthor;
+        private System.Windows.Forms.LinkLabel linkLabelDriverRepo;
+        private System.Windows.Forms.LinkLabel linkLabelFirmwareRepo;
+        private System.Windows.Forms.LinkLabel linkLabelGitHub;
         private System.Windows.Forms.Label labelFilterCount;
         private System.Windows.Forms.ComboBox comboBoxFilterCount;
         private System.Windows.Forms.Label labelFilterNames;
