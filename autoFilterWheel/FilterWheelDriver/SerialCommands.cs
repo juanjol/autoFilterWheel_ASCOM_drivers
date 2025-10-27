@@ -44,8 +44,22 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         public const string CMD_SET_DISABLE_DELAY = "MDD"; // Set motor disable delay (MDD1000) -> Returns: MDD[n]
         public const string CMD_RESET_MOTOR_CONFIG = "RMC"; // Reset motor configuration -> Returns: MOTOR_CONFIG_RESET
 
+        // Direction Inversion Commands
+        public const string CMD_SET_MOTOR_INV_NORMAL = "MINV0";    // Set motor direction normal -> Returns: MINV:Normal
+        public const string CMD_SET_MOTOR_INV_INVERTED = "MINV1";  // Set motor direction inverted -> Returns: MINV:Inverted
+        public const string CMD_GET_MOTOR_INV = "GMINV";           // Get motor inversion status -> Returns: GMINV:[0 (Normal)|1 (Inverted)]
+        public const string CMD_SET_ENC_INV_NORMAL = "ENCINV0";    // Set encoder direction normal -> Returns: ENCINV:Normal
+        public const string CMD_SET_ENC_INV_INVERTED = "ENCINV1";  // Set encoder direction inverted -> Returns: ENCINV:Inverted
+        public const string CMD_GET_ENC_INV = "GENCINV";           // Get encoder inversion status -> Returns: GENCINV:[0 (Normal)|1 (Inverted)]
+
         // Display Commands
         public const string CMD_ROTATE_DISPLAY = "ROTATE"; // Rotate display 180° (ROTATE0/ROTATE1) -> Returns: ROTATE[0/1]
+        public const string CMD_SET_DISPLAY_MODE = "DISPMODE"; // Set display mode (DISPMODE0/DISPMODE1) -> Returns: DISPMODE[0/1]:[Minimal|Detailed]
+        public const string CMD_SET_BRIGHTNESS = "BRIGHT"; // Set brightness (BRIGHT[0-255]) -> Returns: BRIGHT:[value]
+        public const string CMD_DISPLAY_ON = "DISPON"; // Turn display on -> Returns: DISPON:OK
+        public const string CMD_DISPLAY_OFF = "DISPOFF"; // Turn display off -> Returns: DISPOFF:OK
+        public const string CMD_SET_DISPLAY_POWER = "DISPPOWER"; // Set display power mode (DISPPOWER[0|1|2]) -> Returns: DISPPOWER:[mode]:[Auto|AlwaysOn|AlwaysOff]
+        public const string CMD_SET_DISPLAY_TIMEOUT = "DISPTIMEOUT"; // Set display auto-off timeout (DISPTIMEOUT[seconds]) -> Returns: DISPTIMEOUT:[seconds]:[Seconds|Never]
         public const string CMD_GET_DISPLAY_INFO = "DISPLAY"; // Get display information -> Returns: DISPLAY:Size=128x64,Rotation=...
 
         // Encoder Commands
@@ -64,6 +78,9 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         public const string CMD_SET_ANGLE = "SETANG";             // Set custom angle (SETANG1:0.0, SETANG2:68.5, etc.) -> Returns: SETANG:Position X set to Y°
         public const string CMD_GET_ANGLE = "GETANG";             // Get custom angle (GETANG1, GETANG2, or GETANG for all) -> Returns: GETANG1:0.00° (custom)
         public const string CMD_CLEAR_ANGLES = "CLEARANG";        // Clear all custom angles -> Returns: CLEARANG:All custom angles cleared...
+
+        // Configuration Commands
+        public const string CMD_GET_CONFIG = "GETCONFIG";  // Get all configuration at once -> Returns: Multi-line config
 
         // Utility Commands
         public const string CMD_HELP = "HELP";             // Show help -> Returns: (help text)
@@ -102,15 +119,15 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
         // Communication parameters
         public const int BAUD_RATE = 115200;
-        public const int COMMAND_TIMEOUT_MS = 1000;
-        public const int MOVEMENT_TIMEOUT_MS = 30000;  // 30 seconds for movements that can take up to 10 seconds
+        public const int COMMAND_TIMEOUT_MS = 3000;  // Increased to 3000ms to handle EEPROM access delays
+        public const int MOVEMENT_TIMEOUT_MS = 120000;  // 2 minutes - maximum allowed by ASCOM Serial class
         public const int MAX_COMMAND_LENGTH = 50;
 
         // Filter wheel specifications (from firmware config.h)
         public const int MIN_FILTER_COUNT = 3;
         public const int MAX_FILTER_COUNT = 9;  // Firmware v2 supports 3-9 filters
         public const int DEFAULT_FILTER_COUNT = 5;
-        public const int STEPS_PER_REVOLUTION = 2048;  // 28BYJ-48 stepper motor
+        public const int STEPS_PER_REVOLUTION = 35500;  // Updated steps per revolution
         public const int MAX_FILTER_NAME_LENGTH = 15;
 
         // Expected device identification (firmware v2)

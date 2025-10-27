@@ -6,6 +6,7 @@ using ASCOM.Utilities;
 using System.IO;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ASCOM.autoFilterWheel.FilterWheel
 {
@@ -22,6 +23,9 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
         // Custom Angles calibration control
         private CustomAnglesControl customAnglesControl;
+
+        // Flag to prevent event handlers from sending commands while loading configuration
+        private bool isLoadingConfiguration = false;
 
         public SetupDialogForm(TraceLogger tlDriver)
         {
@@ -76,7 +80,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 {
                     if (i < FilterWheelHardware.filterCount && !string.IsNullOrWhiteSpace(textBoxes[i].Text))
                     {
-                        FilterWheelHardware.filterNames[i] = textBoxes[i].Text.Trim();
+                        FilterWheelHardware.filterNames[i] = SanitizeFilterName(textBoxes[i].Text.Trim());
                     }
                     else
                     {
@@ -187,6 +191,9 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
             labelVersion.Text = $"Version: {version.Major}.{version.Minor}.{version.Build}";
 
+            // Initialize status bar
+            UpdateStatus("Ready");
+
             tl.LogMessage("InitUI", $"Set UI controls to COM Port: {comboBoxComPort.SelectedItem}, Filter Count: {FilterWheelHardware.filterCount}");
         }
 
@@ -295,24 +302,59 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
             // Enable filter selection only when connected
             btnSelectFilter.Enabled = connected;
+            btnStopMovement.Enabled = connected;
+
+            // Enable motor configuration buttons when connected
+            btnLoadMotorConfig.Enabled = connected;
+            btnSetMotorConfig.Enabled = connected;
+            btnResetMotorConfig.Enabled = connected;
+
+            // Enable display configuration buttons when connected
+            btnLoadDisplayConfig.Enabled = connected;
+            btnApplyDisplayConfig.Enabled = connected;
+            btnSetDisplayRotation.Enabled = connected;
         }
 
         private void BtnConnect_Click(object sender, EventArgs e)
         {
+            string portName = null;
+            bool manualConnectionFailed = false;
+
+            // Clear log when connecting
+            ClearLog();
+            UpdateStatus("Connecting...");
+
+            // If no port selected or invalid, try auto-detection immediately
             if (comboBoxComPort.SelectedItem == null || comboBoxComPort.SelectedItem.ToString() == NO_PORTS_MESSAGE)
             {
-                MessageBox.Show("Please select a valid COM port.", "Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                tl.LogMessage("BtnConnect_Click", "No port selected, attempting auto-detection");
+                AddToLog("INFO", "No port selected, searching for device...");
+                UpdateStatus("Searching for device...");
+
+                portName = AutoDetectPort();
+
+                if (portName == null)
+                {
+                    UpdateStatus("Device not found");
+                    MessageBox.Show("Could not find the filter wheel on any available COM port.\n\nPlease make sure:\n- The device is connected\n- Drivers are installed\n- The device is powered on", "Device Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Update combo box selection
+                comboBoxComPort.SelectedItem = portName;
+                AddToLog("INFO", $"Device found on {portName}!");
+            }
+            else
+            {
+                // Port is selected, try to connect to it first
+                portName = comboBoxComPort.SelectedItem.ToString();
             }
 
             try
             {
-                string portName = comboBoxComPort.SelectedItem.ToString();
                 tl.LogMessage("BtnConnect_Click", $"Attempting to connect to {portName}");
-
-                // Clear log when connecting
-                ClearLog();
-                AddToLog("INFO", "Connecting to device...");
+                AddToLog("INFO", $"Connecting to {portName}...");
+                UpdateStatus($"Connecting to {portName}...");
 
                 serialComm.Connect(portName);
 
@@ -320,8 +362,10 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 {
                     tl.LogMessage("BtnConnect_Click", "Connected successfully, retrieving filter configuration");
                     AddToLog("INFO", "Connected successfully!");
+                    UpdateStatus("Reading filter configuration...");
 
-                    // Retrieve filter count and names from device
+                    // Retrieve all configuration from device using GETCONFIG
+                    // This includes: filter count, filter names, motor config, display config, and current status
                     RetrieveFilterConfiguration();
 
                     // Initialize custom angles control with connection
@@ -332,12 +376,70 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                     }
 
                     UpdateConnectionButtons(true);
+                    UpdateStatus($"Connected to {portName}");
                 }
             }
             catch (Exception ex)
             {
-                tl.LogMessage("BtnConnect_Click", $"Connection failed: {ex.Message}");
-                MessageBox.Show($"Failed to connect: {ex.Message}", "Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                tl.LogMessage("BtnConnect_Click", $"Connection to {portName} failed: {ex.Message}");
+                AddToLog("ERR", $"Connection to {portName} failed: {ex.Message}");
+                UpdateStatus($"Connection failed");
+
+                // If manual connection failed, try auto-detection as fallback
+                if (!manualConnectionFailed && comboBoxComPort.SelectedItem != null &&
+                    comboBoxComPort.SelectedItem.ToString() != NO_PORTS_MESSAGE)
+                {
+                    manualConnectionFailed = true;
+                    tl.LogMessage("BtnConnect_Click", "Manual connection failed, attempting auto-detection...");
+                    AddToLog("WARN", "Manual connection failed, searching for device on all ports...");
+                    UpdateStatus("Searching for device...");
+
+                    string detectedPort = AutoDetectPort();
+
+                    if (detectedPort != null && detectedPort != portName)
+                    {
+                        // Found device on a different port, try connecting
+                        AddToLog("INFO", $"Device found on {detectedPort}, attempting connection...");
+                        UpdateStatus($"Connecting to {detectedPort}...");
+                        comboBoxComPort.SelectedItem = detectedPort;
+
+                        try
+                        {
+                            serialComm.Connect(detectedPort);
+
+                            if (serialComm.IsConnected)
+                            {
+                                tl.LogMessage("BtnConnect_Click", $"Auto-detection successful! Connected to {detectedPort}");
+                                AddToLog("INFO", $"Connected successfully to {detectedPort}!");
+                                UpdateStatus("Reading filter configuration...");
+
+                                // Retrieve all configuration from device using GETCONFIG
+                                RetrieveFilterConfiguration();
+
+                                // Initialize custom angles control
+                                if (customAnglesControl != null)
+                                {
+                                    customAnglesControl.Initialize(serialComm, tl, FilterWheelHardware.filterCount, SendCommandWithLog);
+                                    customAnglesControl.UpdateConnectionState(true);
+                                }
+
+                                UpdateConnectionButtons(true);
+                                UpdateStatus($"Connected to {detectedPort}");
+                                return; // Success!
+                            }
+                        }
+                        catch (Exception autoEx)
+                        {
+                            tl.LogMessage("BtnConnect_Click", $"Auto-detection connection failed: {autoEx.Message}");
+                            AddToLog("ERR", $"Auto-detection connection failed: {autoEx.Message}");
+                            UpdateStatus("Connection failed");
+                        }
+                    }
+                }
+
+                // All connection attempts failed
+                UpdateStatus("Connection failed");
+                MessageBox.Show($"Failed to connect to {portName}.\n\nError: {ex.Message}\n\nPlease verify:\n- The device is connected\n- The correct COM port is selected\n- No other application is using the port", "Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 UpdateConnectionButtons(false);
             }
         }
@@ -358,11 +460,13 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                     tl.LogMessage("BtnDisconnect_Click", "Disconnected successfully");
                 }
                 UpdateConnectionButtons(false);
+                UpdateStatus("Disconnected");
                 MessageBox.Show("Disconnected successfully.", "Disconnected", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
                 tl.LogMessage("BtnDisconnect_Click", $"Disconnect error: {ex.Message}");
+                UpdateStatus("Disconnect error");
                 MessageBox.Show($"Error during disconnect: {ex.Message}", "Disconnect Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 UpdateConnectionButtons(false);
             }
@@ -397,14 +501,15 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                     if (string.IsNullOrWhiteSpace(filterName))
                         filterName = $"Filter{i + 1}";
 
-                    // Limit name length to match Arduino firmware (15 chars max)
-                    if (filterName.Length > 15)
-                        filterName = filterName.Substring(0, 15);
+                    // Sanitize filter name (remove problematic characters, limit length)
+                    filterName = SanitizeFilterName(filterName);
 
                     string snCommand = $"SN{i + 1}:{filterName}";
                     tl.LogMessage("BtnSet_Click", $"Sending filter name: {snCommand}");
                     string snResponse = SendCommandWithLog(snCommand);
                     tl.LogMessage("BtnSet_Click", $"Filter name response: {snResponse}");
+                    // Add delay between consecutive EEPROM writes
+                    System.Threading.Thread.Sleep(100);
                 }
 
                 tl.LogMessage("BtnSet_Click", "Filter configuration sent successfully");
@@ -424,7 +529,128 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             try
             {
                 AddToLog("INFO", "Retrieving device configuration...");
+                UpdateStatus("Reading configuration...");
 
+                // Use new GETCONFIG command to get all configuration at once
+                DeviceConfig config = serialComm.GetDeviceConfig();
+
+                // Apply configuration to UI
+                ApplyDeviceConfigToUI(config);
+
+                tl.LogMessage("RetrieveFilterConfiguration", "Configuration retrieved successfully using GETCONFIG");
+                AddToLog("INFO", "Configuration retrieved successfully!");
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("RetrieveFilterConfiguration", $"Error retrieving configuration: {ex.Message}");
+                AddToLog("ERR", $"Error retrieving configuration: {ex.Message}");
+
+                // Fallback to old method if GETCONFIG fails
+                tl.LogMessage("RetrieveFilterConfiguration", "Falling back to individual commands");
+                AddToLog("WARN", "Using fallback method...");
+                RetrieveFilterConfigurationLegacy();
+            }
+        }
+
+        /// <summary>
+        /// Apply device configuration to UI controls
+        /// </summary>
+        private void ApplyDeviceConfigToUI(DeviceConfig config)
+        {
+            // Set flag to prevent event handlers from sending commands
+            isLoadingConfiguration = true;
+
+            try
+            {
+                // Filter configuration
+                FilterWheelHardware.filterCount = config.FilterCount;
+                comboBoxFilterCount.SelectedItem = config.FilterCount.ToString();
+                tl.LogMessage("ApplyDeviceConfigToUI", $"Filter count: {config.FilterCount}");
+                AddToLog("INFO", $"Device has {config.FilterCount} filters");
+
+                // Update filter names
+                FilterWheelHardware.filterNames = new string[9];
+                TextBox[] textBoxes = { textBoxFilter1, textBoxFilter2, textBoxFilter3, textBoxFilter4, textBoxFilter5, textBoxFilter6, textBoxFilter7, textBoxFilter8, textBoxFilter9 };
+
+                for (int i = 0; i < 9; i++)
+                {
+                    if (i < config.FilterCount && !string.IsNullOrEmpty(config.FilterNames[i]))
+                    {
+                        FilterWheelHardware.filterNames[i] = config.FilterNames[i];
+                        textBoxes[i].Text = config.FilterNames[i];
+                        AddToLog("INFO", $"Filter {i + 1}: {config.FilterNames[i]}");
+                    }
+                    else
+                    {
+                        FilterWheelHardware.filterNames[i] = $"Filter{i + 1}";
+                        textBoxes[i].Text = $"Filter{i + 1}";
+                    }
+                }
+
+                UpdateFilterVisibility();
+
+                // Motor configuration
+                numericMotorSpeed.Value = Math.Min(numericMotorSpeed.Maximum, Math.Max(numericMotorSpeed.Minimum, config.MotorSpeed));
+                numericMaxSpeed.Value = Math.Min(numericMaxSpeed.Maximum, Math.Max(numericMaxSpeed.Minimum, config.MotorMaxSpeed));
+                numericAcceleration.Value = Math.Min(numericAcceleration.Maximum, Math.Max(numericAcceleration.Minimum, config.MotorAccel));
+                numericDisableDelay.Value = Math.Min(numericDisableDelay.Maximum, Math.Max(numericDisableDelay.Minimum, config.MotorDisableDelay));
+                numericStepsPerRev.Value = Math.Min(numericStepsPerRev.Maximum, Math.Max(numericStepsPerRev.Minimum, config.MotorStepsPerRev));
+                chkMotorInverted.Checked = config.MotorInverted;
+                chkEncoderInverted.Checked = config.EncoderInverted;
+
+                tl.LogMessage("ApplyDeviceConfigToUI", "Motor configuration applied");
+
+                // Display configuration
+                radioDisplayInverted.Checked = config.DisplayRotation180;
+                radioDisplayNormal.Checked = !config.DisplayRotation180;
+                chkDisplayEnabled.Checked = config.DisplayEnabled;
+                trackBarBrightness.Value = Math.Min(255, Math.Max(0, config.DisplayBrightness));
+                labelBrightnessValue.Text = config.DisplayBrightness.ToString();
+
+                radioDisplayDetailed.Checked = config.DisplayMode == 1;
+                radioDisplayMinimal.Checked = config.DisplayMode == 0;
+
+                switch (config.DisplayPowerMode)
+                {
+                    case 0:
+                        radioPowerAuto.Checked = true;
+                        break;
+                    case 1:
+                        radioPowerAlwaysOn.Checked = true;
+                        break;
+                    case 2:
+                        radioPowerAlwaysOff.Checked = true;
+                        break;
+                }
+
+                numericDisplayTimeout.Value = Math.Min(65535, Math.Max(0, config.DisplayTimeout));
+
+                tl.LogMessage("ApplyDeviceConfigToUI", "Display configuration applied");
+
+                // Status information
+                tl.LogMessage("ApplyDeviceConfigToUI", $"Current position: {config.StatusPosition}, Moving: {config.StatusMoving}, Calibrated: {config.StatusCalibrated}, Angle: {config.StatusAngle}");
+
+                // Set current position in combo box
+                if (config.StatusPosition >= 1 && config.StatusPosition <= config.FilterCount)
+                {
+                    comboBoxSelectFilter.SelectedIndex = config.StatusPosition - 1;
+                    AddToLog("INFO", $"Filter wheel is at position {config.StatusPosition}");
+                }
+            }
+            finally
+            {
+                // Clear flag to allow event handlers to work normally
+                isLoadingConfiguration = false;
+            }
+        }
+
+        /// <summary>
+        /// Legacy method - retrieve configuration using individual commands
+        /// </summary>
+        private void RetrieveFilterConfigurationLegacy()
+        {
+            try
+            {
                 // Get filter count from device (GF command)
                 string response = SendCommandWithLog("GF");
                 if (response.StartsWith("F"))
@@ -434,7 +660,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                     {
                         FilterWheelHardware.filterCount = deviceFilterCount;
                         comboBoxFilterCount.SelectedItem = deviceFilterCount.ToString();
-                        tl.LogMessage("RetrieveFilterConfiguration", $"Retrieved filter count: {deviceFilterCount}");
+                        tl.LogMessage("RetrieveFilterConfigurationLegacy", $"Retrieved filter count: {deviceFilterCount}");
                         AddToLog("INFO", $"Device has {deviceFilterCount} filters");
                     }
                 }
@@ -446,7 +672,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                     try
                     {
                         string nameResponse = SendCommandWithLog($"GN{i}");
-                        string prefix = $"N{i}:";  // Firmware returns "N1:Name" format (not GN)
+                        string prefix = $"N{i}:";
                         if (nameResponse.StartsWith(prefix))
                         {
                             retrievedNames[i - 1] = nameResponse.Substring(prefix.Length);
@@ -455,18 +681,17 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                         else
                         {
                             retrievedNames[i - 1] = $"Filter{i}";
-                            AddToLog("WARN", $"Invalid response for filter {i}: '{nameResponse}', using default name");
                         }
+                        System.Threading.Thread.Sleep(100);
                     }
                     catch (Exception ex)
                     {
-                        tl.LogMessage("RetrieveFilterConfiguration", $"Error getting name for position {i}: {ex.Message}");
-                        AddToLog("ERR", $"Error getting filter {i} name: {ex.Message}");
+                        tl.LogMessage("RetrieveFilterConfigurationLegacy", $"Error getting name for position {i}: {ex.Message}");
                         retrievedNames[i - 1] = $"Filter{i}";
                     }
                 }
 
-                // Update UI with retrieved names (max 9 filters)
+                // Update UI
                 FilterWheelHardware.filterNames = new string[9];
                 TextBox[] textBoxes = { textBoxFilter1, textBoxFilter2, textBoxFilter3, textBoxFilter4, textBoxFilter5, textBoxFilter6, textBoxFilter7, textBoxFilter8, textBoxFilter9 };
 
@@ -485,12 +710,12 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 }
 
                 UpdateFilterVisibility();
-                tl.LogMessage("RetrieveFilterConfiguration", "Filter configuration retrieved successfully");
-                AddToLog("INFO", "Configuration retrieved successfully!");
+                AddToLog("INFO", "Configuration retrieved (legacy method)");
             }
             catch (Exception ex)
             {
-                tl.LogMessage("RetrieveFilterConfiguration", $"Error retrieving filter configuration: {ex.Message}");
+                tl.LogMessage("RetrieveFilterConfigurationLegacy", $"Error: {ex.Message}");
+                AddToLog("ERR", $"Error: {ex.Message}");
             }
         }
 
@@ -601,6 +826,33 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             }
         }
 
+        private void BtnStopMovement_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Not connected to the device.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnStopMovement_Click", "Sending emergency stop command");
+                AddToLog("WARN", "Emergency stop requested!");
+
+                string response = SendCommandWithLog("STOP");
+
+                tl.LogMessage("BtnStopMovement_Click", $"Response: {response}");
+                AddToLog("WARN", "Movement stopped!");
+                MessageBox.Show("Filter wheel movement stopped!", "Emergency Stop", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnStopMovement_Click", $"Error: {ex.Message}");
+                AddToLog("ERR", $"Stop command failed: {ex.Message}");
+                MessageBox.Show($"Error stopping movement: {ex.Message}", "Stop Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         /// <summary>
         /// Gets the compilation date of the assembly
         /// </summary>
@@ -623,8 +875,7 @@ namespace ASCOM.autoFilterWheel.FilterWheel
         }
 
         /// <summary>
-        /// Adds a message to the communication log
-        /// Implements smart auto-scroll: follows log if at bottom, stops if user scrolled up
+        /// Adds a message to the communication log with automatic scroll to bottom
         /// </summary>
         private void AddToLog(string direction, string message)
         {
@@ -649,22 +900,29 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             // Update textbox
             if (textBoxLog != null)
             {
-                // Check if user was viewing the bottom before adding new text
-                // We consider "at bottom" if the selection/cursor is within the last 100 characters
-                bool wasAtBottom = (textBoxLog.SelectionStart >= textBoxLog.Text.Length - 100);
-
                 // Update text
                 textBoxLog.Text = string.Join(Environment.NewLine, logBuffer);
 
-                // Only auto-scroll if user was at the bottom
-                if (wasAtBottom)
-                {
-                    textBoxLog.SelectionStart = textBoxLog.Text.Length;
-                    textBoxLog.ScrollToCaret();
-                }
-                // If user scrolled up manually, don't auto-scroll (let them read)
+                // Force scroll to bottom using Win32 message (works even when control is not focused)
+                Win32ScrollToBottom(textBoxLog);
             }
         }
+
+        /// <summary>
+        /// Forces a TextBox to scroll to the bottom using Win32 API
+        /// This works reliably even when the control is not focused
+        /// </summary>
+        private void Win32ScrollToBottom(TextBox textBox)
+        {
+            const int WM_VSCROLL = 0x115;
+            const int SB_BOTTOM = 7;
+
+            // Send scroll to bottom message
+            SendMessage(textBox.Handle, WM_VSCROLL, (IntPtr)SB_BOTTOM, IntPtr.Zero);
+        }
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
 
         /// <summary>
         /// Clear the communication log
@@ -681,6 +939,24 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             if (textBoxLog != null)
             {
                 textBoxLog.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Update status bar message
+        /// </summary>
+        private void UpdateStatus(string message)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action<string>(UpdateStatus), message);
+                return;
+            }
+
+            if (toolStripStatusLabel != null)
+            {
+                toolStripStatusLabel.Text = message;
+                statusStrip.Refresh();
             }
         }
 
@@ -758,6 +1034,670 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 MessageBox.Show($"Could not open link: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        /// <summary>
+        /// Validates and sanitizes filter name to ensure serial protocol compatibility
+        /// Excludes only: : (separator), \n, \r, # (command prefix)
+        /// </summary>
+        private string SanitizeFilterName(string filterName)
+        {
+            if (string.IsNullOrEmpty(filterName))
+                return filterName;
+
+            // Remove problematic characters that would break serial protocol
+            string sanitized = filterName.Replace(":", "")
+                                         .Replace("\n", "")
+                                         .Replace("\r", "")
+                                         .Replace("#", "");
+
+            // Trim to maximum length
+            if (sanitized.Length > SerialCommands.MAX_FILTER_NAME_LENGTH)
+                sanitized = sanitized.Substring(0, SerialCommands.MAX_FILTER_NAME_LENGTH);
+
+            return sanitized;
+        }
+
+        /// <summary>
+        /// Auto-detect the COM port where the filter wheel is connected
+        /// </summary>
+        private string AutoDetectPort()
+        {
+            // Use the static method from SerialCommunication for consistency
+            return SerialCommunication.AutoDetectPort(tl);
+        }
+
+        /// <summary>
+        /// Load motor configuration from device (without UI messages)
+        /// </summary>
+        private void LoadMotorConfigFromDevice()
+        {
+            if (!serialComm.IsConnected)
+                return;
+
+            // Send GMC command to get motor configuration
+            // Response format: MOTOR_CONFIG:SPEED=4000,MAX_SPEED=5000,ACCEL=100000,DISABLE_DELAY=1000,STEPS_PER_REV=35500,MOTOR_INV=0,ENC_INV=0
+            string response = SendCommandWithLog("GMC");
+
+            if (response.StartsWith("MOTOR_CONFIG:"))
+            {
+                string configData = response.Substring("MOTOR_CONFIG:".Length);
+                string[] pairs = configData.Split(',');
+
+                foreach (string pair in pairs)
+                {
+                    string[] keyValue = pair.Split('=');
+                    if (keyValue.Length == 2)
+                    {
+                        string key = keyValue[0].Trim();
+                        string value = keyValue[1].Trim();
+
+                        switch (key)
+                        {
+                            case "SPEED":
+                                if (int.TryParse(value, out int speed))
+                                    numericMotorSpeed.Value = Math.Min(numericMotorSpeed.Maximum, Math.Max(numericMotorSpeed.Minimum, speed));
+                                break;
+                            case "MAX_SPEED":
+                                if (int.TryParse(value, out int maxSpeed))
+                                    numericMaxSpeed.Value = Math.Min(numericMaxSpeed.Maximum, Math.Max(numericMaxSpeed.Minimum, maxSpeed));
+                                break;
+                            case "ACCEL":
+                                if (int.TryParse(value, out int accel))
+                                    numericAcceleration.Value = Math.Min(numericAcceleration.Maximum, Math.Max(numericAcceleration.Minimum, accel));
+                                break;
+                            case "DISABLE_DELAY":
+                                if (int.TryParse(value, out int disableDelay))
+                                    numericDisableDelay.Value = Math.Min(numericDisableDelay.Maximum, Math.Max(numericDisableDelay.Minimum, disableDelay));
+                                break;
+                            case "STEPS_PER_REV":
+                                if (int.TryParse(value, out int stepsPerRev))
+                                    numericStepsPerRev.Value = Math.Min(numericStepsPerRev.Maximum, Math.Max(numericStepsPerRev.Minimum, stepsPerRev));
+                                break;
+                            case "MOTOR_INV":
+                                chkMotorInverted.Checked = value == "1";
+                                break;
+                            case "ENC_INV":
+                                chkEncoderInverted.Checked = value == "1";
+                                break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unexpected response: {response}");
+            }
+        }
+
+        /// <summary>
+        /// Load motor configuration from the filter wheel
+        /// </summary>
+        private void BtnLoadMotorConfig_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnLoadMotorConfig_Click", "Loading motor configuration from device");
+                AddToLog("INFO", "Loading motor configuration...");
+
+                LoadMotorConfigFromDevice();
+
+                tl.LogMessage("BtnLoadMotorConfig_Click", "Motor configuration loaded successfully");
+                AddToLog("INFO", "Motor configuration loaded successfully!");
+                MessageBox.Show("Motor configuration loaded from device!", "Load Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnLoadMotorConfig_Click", $"Error loading motor configuration: {ex.Message}");
+                AddToLog("ERR", $"Error loading motor configuration: {ex.Message}");
+                MessageBox.Show($"Error loading motor configuration: {ex.Message}", "Load Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Apply motor configuration to the filter wheel
+        /// </summary>
+        private void BtnSetMotorConfig_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnSetMotorConfig_Click", "Sending motor configuration to device");
+                AddToLog("INFO", "Applying motor configuration...");
+
+                // Send individual motor configuration commands
+                SendCommandWithLog($"MS{numericMotorSpeed.Value}");
+                SendCommandWithLog($"MXS{numericMaxSpeed.Value}");
+                SendCommandWithLog($"MA{numericAcceleration.Value}");
+                SendCommandWithLog($"MDD{numericDisableDelay.Value}");
+
+                // Send motor inversion command
+                SendCommandWithLog(chkMotorInverted.Checked ? "MINV1" : "MINV0");
+
+                // Send encoder inversion command
+                SendCommandWithLog(chkEncoderInverted.Checked ? "ENCINV1" : "ENCINV0");
+
+                tl.LogMessage("BtnSetMotorConfig_Click", "Motor configuration applied successfully");
+                AddToLog("INFO", "Motor configuration applied successfully!");
+                MessageBox.Show("Motor configuration applied to device!", "Apply Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnSetMotorConfig_Click", $"Error applying motor configuration: {ex.Message}");
+                AddToLog("ERR", $"Error applying motor configuration: {ex.Message}");
+                MessageBox.Show($"Error applying motor configuration: {ex.Message}", "Apply Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Reset motor configuration to defaults
+        /// </summary>
+        private void BtnResetMotorConfig_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            DialogResult result = MessageBox.Show("Are you sure you want to reset motor configuration to defaults?", "Confirm Reset", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (result != DialogResult.Yes)
+                return;
+
+            try
+            {
+                tl.LogMessage("BtnResetMotorConfig_Click", "Resetting motor configuration to defaults");
+                AddToLog("WARN", "Resetting motor configuration to defaults...");
+
+                // Send RMC command to reset motor configuration
+                string response = SendCommandWithLog("RMC");
+
+                if (response == "MOTOR_CONFIG_RESET")
+                {
+                    // Reload configuration from device
+                    BtnLoadMotorConfig_Click(sender, e);
+
+                    tl.LogMessage("BtnResetMotorConfig_Click", "Motor configuration reset successfully");
+                    AddToLog("INFO", "Motor configuration reset to defaults!");
+                    MessageBox.Show("Motor configuration reset to defaults!", "Reset Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Unexpected response: {response}");
+                }
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnResetMotorConfig_Click", $"Error resetting motor configuration: {ex.Message}");
+                AddToLog("ERR", $"Error resetting motor configuration: {ex.Message}");
+                MessageBox.Show($"Error resetting motor configuration: {ex.Message}", "Reset Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Update brightness label during scroll (visual feedback only)
+        /// </summary>
+        private void TrackBarBrightness_Scroll(object sender, EventArgs e)
+        {
+            labelBrightnessValue.Text = trackBarBrightness.Value.ToString();
+        }
+
+        /// <summary>
+        /// Send brightness to device when user releases mouse (after scroll ends)
+        /// </summary>
+        private void TrackBarBrightness_MouseUp(object sender, MouseEventArgs e)
+        {
+            // Don't send commands while loading configuration
+            if (isLoadingConfiguration)
+                return;
+
+            // Send brightness command to device after scroll ends
+            if (serialComm != null && serialComm.IsConnected)
+            {
+                try
+                {
+                    string command = $"BRIGHT{trackBarBrightness.Value}";
+                    tl.LogMessage("TrackBarBrightness_MouseUp", $"Sending brightness: {trackBarBrightness.Value}");
+                    SendCommandWithLog(command);
+                }
+                catch (Exception ex)
+                {
+                    tl.LogMessage("TrackBarBrightness_MouseUp", $"Error sending brightness: {ex.Message}");
+                    // No mostramos MessageBox para no interrumpir la experiencia del usuario
+                }
+            }
+        }
+
+        /// <summary>
+        /// Load display configuration from device (without UI messages)
+        /// </summary>
+        private void LoadDisplayConfigFromDevice()
+        {
+            if (!serialComm.IsConnected)
+                return;
+
+            // Send DISPLAY command to get display configuration
+            // Response format: DISPLAY:Size=128x64,Rotation=Normal|180°,Enabled=Yes|No,Update=100ms,Brightness=128
+            string response = SendCommandWithLog("DISPLAY");
+
+            if (response.StartsWith("DISPLAY:"))
+            {
+                string configData = response.Substring("DISPLAY:".Length);
+                string[] pairs = configData.Split(',');
+
+                foreach (string pair in pairs)
+                {
+                    string[] keyValue = pair.Split('=');
+                    if (keyValue.Length == 2)
+                    {
+                        string key = keyValue[0].Trim();
+                        string value = keyValue[1].Trim();
+
+                        switch (key)
+                        {
+                            case "Rotation":
+                                radioDisplayInverted.Checked = value.Contains("180");
+                                radioDisplayNormal.Checked = !value.Contains("180");
+                                break;
+                            case "Enabled":
+                                chkDisplayEnabled.Checked = value.Equals("Yes", StringComparison.OrdinalIgnoreCase);
+                                break;
+                            case "Brightness":
+                                if (int.TryParse(value, out int brightness))
+                                {
+                                    trackBarBrightness.Value = Math.Min(255, Math.Max(0, brightness));
+                                }
+                                break;
+                        }
+                    }
+                }
+
+                // Get display timeout setting
+                try
+                {
+                    string timeoutResponse = SendCommandWithLog("DISPTIMEOUT");
+                    // Response format: DISPTIMEOUT:[seconds]:[Seconds|Never]
+                    if (timeoutResponse.StartsWith("DISPTIMEOUT:"))
+                    {
+                        string timeoutData = timeoutResponse.Substring("DISPTIMEOUT:".Length);
+                        string[] timeoutParts = timeoutData.Split(':');
+                        if (timeoutParts.Length >= 1 && int.TryParse(timeoutParts[0], out int timeout))
+                        {
+                            numericDisplayTimeout.Value = Math.Min(65535, Math.Max(0, timeout));
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    tl.LogMessage("LoadDisplayConfigFromDevice", $"Could not get display timeout: {ex.Message}");
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unexpected response: {response}");
+            }
+        }
+
+        /// <summary>
+        /// Load display configuration from the filter wheel
+        /// </summary>
+        private void BtnLoadDisplayConfig_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnLoadDisplayConfig_Click", "Loading display configuration from device");
+                AddToLog("INFO", "Loading display configuration...");
+
+                LoadDisplayConfigFromDevice();
+
+                tl.LogMessage("BtnLoadDisplayConfig_Click", "Display configuration loaded successfully");
+                AddToLog("INFO", "Display configuration loaded successfully!");
+                MessageBox.Show("Display configuration loaded from device!", "Load Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnLoadDisplayConfig_Click", $"Error loading display configuration: {ex.Message}");
+                AddToLog("ERR", $"Error loading display configuration: {ex.Message}");
+                MessageBox.Show($"Error loading display configuration: {ex.Message}", "Load Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Handle display rotation change in real-time
+        /// </summary>
+        private void RadioDisplayRotation_CheckedChanged(object sender, EventArgs e)
+        {
+            // Don't send commands while loading configuration
+            if (isLoadingConfiguration)
+                return;
+
+            if (serialComm != null && serialComm.IsConnected && ((RadioButton)sender).Checked)
+            {
+                try
+                {
+                    string command = $"ROTATE{(radioDisplayInverted.Checked ? "1" : "0")}";
+                    tl.LogMessage("RadioDisplayRotation_CheckedChanged", $"Sending rotation command: {command}");
+                    SendCommandWithLog(command);
+                }
+                catch (Exception ex)
+                {
+                    tl.LogMessage("RadioDisplayRotation_CheckedChanged", $"Error sending rotation: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handle display mode change in real-time
+        /// </summary>
+        private void RadioDisplayMode_CheckedChanged(object sender, EventArgs e)
+        {
+            // Don't send commands while loading configuration
+            if (isLoadingConfiguration)
+                return;
+
+            if (serialComm != null && serialComm.IsConnected && ((RadioButton)sender).Checked)
+            {
+                try
+                {
+                    string command = $"DISPMODE{(radioDisplayDetailed.Checked ? "1" : "0")}";
+                    tl.LogMessage("RadioDisplayMode_CheckedChanged", $"Sending display mode command: {command}");
+                    SendCommandWithLog(command);
+                }
+                catch (Exception ex)
+                {
+                    tl.LogMessage("RadioDisplayMode_CheckedChanged", $"Error sending display mode: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handle power mode change in real-time
+        /// </summary>
+        private void RadioPowerMode_CheckedChanged(object sender, EventArgs e)
+        {
+            // Don't send commands while loading configuration
+            if (isLoadingConfiguration)
+                return;
+
+            if (serialComm != null && serialComm.IsConnected && ((RadioButton)sender).Checked)
+            {
+                try
+                {
+                    int powerMode = radioPowerAuto.Checked ? 0 : (radioPowerAlwaysOn.Checked ? 1 : 2);
+                    string command = $"DISPPOWER{powerMode}";
+                    tl.LogMessage("RadioPowerMode_CheckedChanged", $"Sending power mode command: {command}");
+                    SendCommandWithLog(command);
+                }
+                catch (Exception ex)
+                {
+                    tl.LogMessage("RadioPowerMode_CheckedChanged", $"Error sending power mode: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handle display enabled change in real-time
+        /// </summary>
+        private void ChkDisplayEnabled_CheckedChanged(object sender, EventArgs e)
+        {
+            // Don't send commands while loading configuration
+            if (isLoadingConfiguration)
+                return;
+
+            if (serialComm != null && serialComm.IsConnected)
+            {
+                try
+                {
+                    string command = chkDisplayEnabled.Checked ? "DISPON" : "DISPOFF";
+                    tl.LogMessage("ChkDisplayEnabled_CheckedChanged", $"Sending display enabled command: {command}");
+                    SendCommandWithLog(command);
+                }
+                catch (Exception ex)
+                {
+                    tl.LogMessage("ChkDisplayEnabled_CheckedChanged", $"Error sending display enabled: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handle display timeout change in real-time
+        /// </summary>
+        private void NumericDisplayTimeout_ValueChanged(object sender, EventArgs e)
+        {
+            // Don't send commands while loading configuration
+            if (isLoadingConfiguration)
+                return;
+
+            if (serialComm != null && serialComm.IsConnected)
+            {
+                try
+                {
+                    string command = $"DISPTIMEOUT{numericDisplayTimeout.Value}";
+                    tl.LogMessage("NumericDisplayTimeout_ValueChanged", $"Sending display timeout command: {command}");
+                    SendCommandWithLog(command);
+                }
+                catch (Exception ex)
+                {
+                    tl.LogMessage("NumericDisplayTimeout_ValueChanged", $"Error sending display timeout: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Apply display configuration to the filter wheel
+        /// </summary>
+        private void BtnApplyDisplayConfig_Click(object sender, EventArgs e)
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("BtnApplyDisplayConfig_Click", "Sending display configuration to device");
+                AddToLog("INFO", "Applying display configuration...");
+
+                // Send display rotation command
+                SendCommandWithLog($"ROTATE{(radioDisplayInverted.Checked ? "1" : "0")}");
+
+                // Send display mode command
+                SendCommandWithLog($"DISPMODE{(radioDisplayDetailed.Checked ? "1" : "0")}");
+
+                // Send brightness command
+                SendCommandWithLog($"BRIGHT{trackBarBrightness.Value}");
+
+                // Send display power mode command
+                int powerMode = radioPowerAuto.Checked ? 0 : (radioPowerAlwaysOn.Checked ? 1 : 2);
+                SendCommandWithLog($"DISPPOWER{powerMode}");
+
+                // Send display on/off command
+                SendCommandWithLog(chkDisplayEnabled.Checked ? "DISPON" : "DISPOFF");
+
+                // Send display auto-off timeout (only relevant when in Auto power mode)
+                SendCommandWithLog($"DISPTIMEOUT{numericDisplayTimeout.Value}");
+
+                tl.LogMessage("BtnApplyDisplayConfig_Click", "Display configuration applied successfully");
+                AddToLog("INFO", "Display configuration applied successfully!");
+                MessageBox.Show("Display configuration applied to device!", "Apply Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("BtnApplyDisplayConfig_Click", $"Error applying display configuration: {ex.Message}");
+                AddToLog("ERR", $"Error applying display configuration: {ex.Message}");
+                MessageBox.Show($"Error applying display configuration: {ex.Message}", "Apply Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #region Manual Command Section
+
+        /// <summary>
+        /// Handle text change to update autocomplete and tooltip
+        /// </summary>
+        private void TextBoxManualCommand_TextChanged(object sender, EventArgs e)
+        {
+            if (textBoxManualCommand == null)
+                return;
+
+            // Get command info for tooltip
+            string currentText = textBoxManualCommand.Text.Trim().ToUpperInvariant();
+            if (!string.IsNullOrWhiteSpace(currentText))
+            {
+                var commandInfo = CommandHelp.GetCommandInfo(currentText);
+                if (commandInfo != null)
+                {
+                    toolTipCommand.SetToolTip(textBoxManualCommand, commandInfo.GetDetailedHelp());
+                }
+                else
+                {
+                    toolTipCommand.SetToolTip(textBoxManualCommand, "Type a command or press F1 for help");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handle key down events in manual command textbox
+        /// </summary>
+        private void TextBoxManualCommand_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+                SendManualCommand();
+            }
+            else if (e.KeyCode == Keys.F1)
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+                ShowCommandHelp();
+            }
+            else if (e.Control && e.KeyCode == Keys.Space)
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+                ShowAutocompletePopup();
+            }
+        }
+
+        /// <summary>
+        /// Handle send command button click
+        /// </summary>
+        private void BtnSendCommand_Click(object sender, EventArgs e)
+        {
+            SendManualCommand();
+        }
+
+        /// <summary>
+        /// Handle help button click
+        /// </summary>
+        private void BtnCommandHelp_Click(object sender, EventArgs e)
+        {
+            ShowCommandHelp();
+        }
+
+        /// <summary>
+        /// Send manual command to device
+        /// </summary>
+        private void SendManualCommand()
+        {
+            if (!serialComm.IsConnected)
+            {
+                MessageBox.Show("Please connect to the device first.", "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string command = textBoxManualCommand.Text.Trim();
+            if (string.IsNullOrWhiteSpace(command))
+            {
+                MessageBox.Show("Please enter a command.", "No Command", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                tl.LogMessage("SendManualCommand", $"Sending manual command: {command}");
+
+                // Determine timeout based on command type
+                int timeout = SerialCommands.COMMAND_TIMEOUT_MS;
+                string upperCommand = command.ToUpperInvariant();
+
+                // Use extended timeout for movement commands
+                if (upperCommand.StartsWith("MP") || upperCommand.StartsWith("CAL") || upperCommand.StartsWith("CALWIZ"))
+                {
+                    timeout = SerialCommands.MOVEMENT_TIMEOUT_MS;
+                }
+
+                string response = SendCommandWithLog(command, timeout);
+
+                // Clear the textbox after successful send
+                textBoxManualCommand.Clear();
+                textBoxManualCommand.Focus();
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("SendManualCommand", $"Error sending manual command: {ex.Message}");
+                MessageBox.Show($"Error sending command: {ex.Message}", "Command Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Show autocomplete popup with available commands
+        /// </summary>
+        private void ShowAutocompletePopup()
+        {
+            string currentText = textBoxManualCommand.Text.Trim();
+            string[] suggestions = CommandHelp.GetAutocompleteSuggestions(currentText);
+
+            if (suggestions.Length > 0)
+            {
+                // Create a simple popup with suggestions
+                string suggestionsList = string.Join("\n", suggestions.Take(10));
+                MessageBox.Show($"Available commands starting with '{currentText}':\n\n{suggestionsList}\n\n{(suggestions.Length > 10 ? $"... and {suggestions.Length - 10} more" : "")}",
+                    "Autocomplete Suggestions", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        /// <summary>
+        /// Show command help dialog
+        /// </summary>
+        private void ShowCommandHelp()
+        {
+            try
+            {
+                CommandHelpForm helpForm = new CommandHelpForm(textBoxManualCommand.Text.Trim());
+                if (helpForm.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(helpForm.SelectedCommand))
+                {
+                    textBoxManualCommand.Text = helpForm.SelectedCommand;
+                    textBoxManualCommand.Focus();
+                    textBoxManualCommand.SelectionStart = textBoxManualCommand.Text.Length;
+                }
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("ShowCommandHelp", $"Error showing command help: {ex.Message}");
+                MessageBox.Show($"Error showing help: {ex.Message}", "Help Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #endregion
 
     }
 }

@@ -5,19 +5,19 @@
 [Setup]
 AppID={{a712827f-ae52-4a47-bedd-fb3735efc64f}
 AppName=ASCOM autoFilterWheel FilterWheel Driver
-AppVerName=ASCOM autoFilterWheel FilterWheel Driver v1.0.0
-AppVersion=v1.0.0
+AppVerName=ASCOM autoFilterWheel FilterWheel Driver v2.0.0
+AppVersion=v2.0.0
 AppPublisher=Juanjo López
 AppPublisherURL=https://github.com/juanjol
 AppSupportURL=https://ascomtalk.groups.io/g/Help
 AppUpdatesURL=https://ascom-standards.org/
-VersionInfoVersion=1.0.0
+VersionInfoVersion=2.0.0
 MinVersion=6.1.7601
 DefaultDirName="{cf}\ASCOM\FilterWheel"
 DisableDirPage=yes
 DisableProgramGroupPage=yes
 OutputDir="./dist/"
-OutputBaseFilename="autoFilterWheelSetup-v1.0.0"
+OutputBaseFilename="autoFilterWheelSetup-v2.0.0"
 Compression=lzma
 SolidCompression=yes
 ; Relative paths for GitHub Actions compatibility
@@ -34,19 +34,23 @@ Name: "{cf}\ASCOM\Uninstall\FilterWheel\autoFilterWheel"
 ; TODO: Add subfolders below {app} as needed (e.g. Name: "{app}\MyFolder")
 
 [Files]
-Source: "bin\Release\ASCOM.autoFilterWheel.exe"; DestDir: "{app}" ;AfterInstall: RegASCOM()
+Source: "bin\Release\ASCOM.autoFilterWheel.exe"; DestDir: "{app}"; Flags: ignoreversion replacesameversion restartreplace uninsrestartdelete; AfterInstall: RegASCOM()
+Source: "bin\Release\ASCOM.autoFilterWheel.exe.config"; DestDir: "{app}"; Flags: ignoreversion replacesameversion
+Source: "bin\Release\ASCOM.*.dll"; DestDir: "{app}"; Flags: ignoreversion replacesameversion
+Source: "bin\Release\ASCOM.*.xml"; DestDir: "{app}"; Flags: skipifsourcedoesntexist ignoreversion
 ; Require a read-me HTML to appear after installation, maybe driver's Help doc
-Source: "ReadMe.htm"; DestDir: "{app}"; Flags: isreadme
-; TODO: Add other files needed by your driver here (add subfolders above)
+Source: "ReadMe.htm"; DestDir: "{app}"; Flags: isreadme ignoreversion
 
 ;Only if COM Local Server
 [Run]
-Filename: "{app}\ASCOM.autoFilterWheel.exe"; Parameters: "/regserver"
+; Wait for registration to complete before continuing
+Filename: "{app}\ASCOM.autoFilterWheel.exe"; Parameters: "/regserver"; Flags: runhidden waituntilterminated
 
 
 ;Only if COM Local Server
 [UninstallRun]
-Filename: "{app}\ASCOM.autoFilterWheel.exe"; Parameters: "/unregserver"
+; Unregister before uninstalling files
+Filename: "{app}\ASCOM.autoFilterWheel.exe"; Parameters: "/unregserver"; Flags: runhidden waituntilterminated
 
 
 
@@ -107,6 +111,67 @@ var
          MsgBox('ASCOM Platform ' + Format('%3.1f', [REQUIRED_PLATFORM_VERSION]) + ' or later is required, but Platform '+ Format('%3.1f', [PlatformVersionNumber]) + ' is installed. Please install the latest Platform before continuing; you will find it at https://www.ascom-standards.org', mbCriticalError, MB_OK);
 end;
 
+// Function to kill any running instances of the driver
+function KillRunningInstances(): Boolean;
+var
+  ResultCode: Integer;
+begin
+  Result := True;
+  // Try to kill any running instances using taskkill
+  Exec('taskkill', '/F /IM ASCOM.autoFilterWheel.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Sleep(1000);
+end;
+
+// Function to clean up old driver completely
+procedure CleanupOldDriver();
+var
+  ResultCode: Integer;
+  AppPath: String;
+  P: Variant;
+  I: Integer;
+begin
+  AppPath := ExpandConstant('{cf}\ASCOM\FilterWheel\ASCOM.autoFilterWheel.exe');
+
+  // Step 1: Unregister from ASCOM Profile
+  try
+    P := CreateOleObject('ASCOM.Utilities.Profile');
+    P.DeviceType := 'FilterWheel';
+    P.Unregister('ASCOM.autoFilterWheel.FilterWheel');
+    Sleep(500);
+  except
+    // Ignore errors if not registered
+  end;
+
+  // Step 2: Unregister COM server if file exists
+  if FileExists(AppPath) then
+  begin
+    Exec(AppPath, '/unregserver', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Sleep(1000);
+  end;
+
+  // Step 3: Kill any running instances
+  KillRunningInstances();
+
+  // Step 4: Delete all driver files
+  if FileExists(AppPath) then
+  begin
+    // Try multiple times in case file is locked
+    for I := 1 to 3 do
+    begin
+      if DeleteFile(AppPath) then
+        Break
+      else
+        Sleep(500);
+    end;
+  end;
+
+  // Step 5: Clean up registry COM entries
+  RegDeleteKeyIncludingSubkeys(HKCR, 'CLSID\{e9752f76-629c-4e84-a248-3262f3da0e1d}');
+  RegDeleteKeyIncludingSubkeys(HKCR, 'ASCOM.autoFilterWheel.FilterWheel');
+
+  Sleep(500);
+end;
+
 // Code to enable the installer to uninstall previous versions of itself when a new version is installed
 procedure CurStepChanged(CurStep: TSetupStep);
 var
@@ -115,40 +180,73 @@ var
   UninstallRegistry: String;
 begin
   if (CurStep = ssInstall) then // Install step has started
-	begin
-      // Create the correct registry location name, which is based on the AppId
-      UninstallRegistry := ExpandConstant('Software\Microsoft\Windows\CurrentVersion\Uninstall\{#SetupSetting("AppId")}' + '_is1');
-      // Check whether an extry exists
-      if RegQueryStringValue(HKLM, UninstallRegistry, 'UninstallString', UninstallExe) then
-        begin // Entry exists and previous version is installed so run its uninstaller quietly after informing the user
-          MsgBox('Setup will now remove the previous version.', mbInformation, MB_OK);
-          Exec(RemoveQuotes(UninstallExe), ' /SILENT', '', SW_SHOWNORMAL, ewWaitUntilTerminated, ResultCode);
-          sleep(1000);    //Give enough time for the install screen to be repainted before continuing
-        end
+  begin
+    // Step 1: Always clean up old driver first (even if no uninstaller found)
+    CleanupOldDriver();
+
+    // Step 2: Run official uninstaller if it exists
+    UninstallRegistry := ExpandConstant('Software\Microsoft\Windows\CurrentVersion\Uninstall\{#SetupSetting("AppId")}' + '_is1');
+    if RegQueryStringValue(HKLM, UninstallRegistry, 'UninstallString', UninstallExe) then
+    begin
+      MsgBox('Removing previous version...', mbInformation, MB_OK);
+      Exec(RemoveQuotes(UninstallExe), '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /FORCECLOSEAPPLICATIONS', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Sleep(2000);
+    end;
+
+    // Step 3: Final cleanup to ensure everything is clean
+    CleanupOldDriver();
+    Sleep(1000);
   end;
 end;
 
 //
-// Register and unregister the driver with the Chooser
-// We already know that the Helper is available
+// Register the driver with ASCOM after installation
 //
 procedure RegASCOM();
 var
    P: Variant;
+   Retry: Integer;
 begin
-   P := CreateOleObject('ASCOM.Utilities.Profile');
-   P.DeviceType := 'FilterWheel';
-   P.Register('ASCOM.autoFilterWheel.FilterWheel', 'autoFilterWheel Ascom driver');
+   // Try multiple times in case of timing issues
+   for Retry := 1 to 3 do
+   begin
+     try
+       Sleep(500); // Wait a bit before registering
+       P := CreateOleObject('ASCOM.Utilities.Profile');
+       P.DeviceType := 'FilterWheel';
+       P.Register('ASCOM.autoFilterWheel.FilterWheel', 'autoFilterWheel ASCOM driver');
+       Exit; // Success, exit
+     except
+       if Retry = 3 then
+         MsgBox('Warning: Could not register driver with ASCOM Chooser. You may need to reinstall.', mbError, MB_OK);
+       Sleep(1000); // Wait before retry
+     end;
+   end;
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
    P: Variant;
+   AppPath: String;
+   ResultCode: Integer;
 begin
    if CurUninstallStep = usUninstall then
    begin
-     P := CreateOleObject('ASCOM.Utilities.Profile');
-     P.DeviceType := 'FilterWheel';
-     P.Unregister('ASCOM.autoFilterWheel.FilterWheel');
+     // Step 1: Unregister from ASCOM Profile
+     try
+       P := CreateOleObject('ASCOM.Utilities.Profile');
+       P.DeviceType := 'FilterWheel';
+       P.Unregister('ASCOM.autoFilterWheel.FilterWheel');
+       Sleep(500);
+     except
+       // Ignore errors during uninstall
+     end;
+
+     // Step 2: Kill any running instances
+     KillRunningInstances();
+
+     // Step 3: Clean up registry COM entries
+     RegDeleteKeyIncludingSubkeys(HKCR, 'CLSID\{e9752f76-629c-4e84-a248-3262f3da0e1d}');
+     RegDeleteKeyIncludingSubkeys(HKCR, 'ASCOM.autoFilterWheel.FilterWheel');
   end;
 end;

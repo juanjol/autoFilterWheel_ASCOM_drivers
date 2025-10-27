@@ -106,6 +106,10 @@
     <Compile Include="FilterWheelDriver\CustomAnglesControl.Designer.cs">
       <DependentUpon>CustomAnglesControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="FilterWheelDriver\CommandHelp.cs" />
+    <Compile Include="FilterWheelDriver\CommandHelpForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="SharedResources.cs" />
     <EmbeddedResource Include="FilterWheelDriver\SetupDialogForm.resx">
       <DependentUpon>SetupDialogForm.cs</DependentUpon>
@@ -151,9 +155,14 @@
   </Target>
   -->
   <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PreBuildEvent>REM Kill any running instances before build (ignore errors)
+taskkill /F /IM ASCOM.autoFilterWheel.exe /FI "STATUS eq RUNNING" 2&gt;nul || exit /b 0</PreBuildEvent>
+    <PostBuildEvent>REM Register the ASCOM driver after build
+REM First unregister if it exists (ignore errors)
+"$(TargetPath)" /unregserver 2&gt;nul || exit /b 0
+ping 127.0.0.1 -n 2 &gt;nul
+REM Register the driver
+"$(TargetPath)" /regserver
+echo Driver registered successfully</PostBuildEvent>
   </PropertyGroup>
 </Project>

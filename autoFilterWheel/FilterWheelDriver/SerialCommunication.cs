@@ -1,9 +1,49 @@
 using System;
 using System.Threading;
 using ASCOM.Utilities;
+using System.Collections.Generic;
 
 namespace ASCOM.autoFilterWheel.FilterWheel
 {
+    /// <summary>
+    /// Complete device configuration data from GETCONFIG command
+    /// </summary>
+    internal class DeviceConfig
+    {
+        // Filter configuration
+        public int FilterCount { get; set; }
+        public string[] FilterNames { get; set; }
+
+        // Motor configuration
+        public int MotorSpeed { get; set; }
+        public int MotorMaxSpeed { get; set; }
+        public int MotorAccel { get; set; }
+        public int MotorDisableDelay { get; set; }
+        public int MotorStepsPerRev { get; set; }
+        public bool MotorInverted { get; set; }
+        public bool EncoderInverted { get; set; }
+
+        // Display configuration
+        public string DisplaySize { get; set; }
+        public bool DisplayRotation180 { get; set; }
+        public bool DisplayEnabled { get; set; }
+        public int DisplayBrightness { get; set; }
+        public int DisplayMode { get; set; }
+        public int DisplayPowerMode { get; set; }
+        public int DisplayTimeout { get; set; }
+
+        // Status
+        public int StatusPosition { get; set; }
+        public bool StatusMoving { get; set; }
+        public bool StatusCalibrated { get; set; }
+        public float StatusAngle { get; set; }
+
+        public DeviceConfig()
+        {
+            FilterNames = new string[SerialCommands.MAX_FILTER_COUNT];
+        }
+    }
+
     /// <summary>
     /// Helper class to manage serial communication with the ESP32-C3 Filter Wheel Controller
     /// </summary>
@@ -93,55 +133,64 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                     // Clear any existing data in the buffer
                     serialPort.ClearBuffers();
 
-                    // Wait a bit for Arduino to initialize after connection
-                    Thread.Sleep(1500);
+                    // Wait briefly for ESP32 to be ready (ESP32-C3 is much faster than Arduino)
+                    Thread.Sleep(250);
 
-                    // Test basic connectivity first (skip device ID check for now)
+                    // Quick connectivity test - try to get filter count
                     try
                     {
-                        // Try a simple command to verify communication
                         serialPort.ClearBuffers();
-                        serialPort.Transmit("#VER\n");
 
-                        // Wait for response with shorter timeout for initial test
+                        // Test with a simple quick command
+                        string testCommand = SerialCommands.FormatCommand(SerialCommands.CMD_GET_FILTERS);
+                        serialPort.Transmit(testCommand);
+
+                        // Try to read response quickly (max 500ms)
                         string response = "";
+                        int maxWait = 10; // 10 * 50ms = 500ms max
                         int attempts = 0;
-                        while (attempts < 50 && !response.Contains("VERSION") && !response.Contains("ERROR"))
+
+                        while (attempts < maxWait && !response.Contains("\n"))
                         {
                             try
                             {
-                                string partial = serialPort.ReceiveCounted(1);
-                                if (!string.IsNullOrEmpty(partial))
+                                string chunk = serialPort.ReceiveCounted(1);
+                                if (!string.IsNullOrEmpty(chunk))
                                 {
-                                    response += partial;
+                                    response += chunk;
+                                    // If we got a complete response, exit early
+                                    if (response.Contains("\n") || response.Contains("\r"))
+                                        break;
                                 }
                             }
                             catch (TimeoutException)
                             {
-                                // Continue trying
+                                // Continue
                             }
                             attempts++;
                             Thread.Sleep(50);
                         }
 
                         response = response.Trim('\r', '\n', ' ');
-                        tl.LogMessage("SerialCommunication.Connect", $"Initial response: '{response}'");
+                        tl.LogMessage("SerialCommunication.Connect", $"Quick test response: '{response}'");
 
-                        if (response.Contains("VERSION"))
+                        if (response.StartsWith("F") || response.Contains("ERROR"))
                         {
-                            tl.LogMessage("SerialCommunication.Connect", "Communication established successfully");
+                            tl.LogMessage("SerialCommunication.Connect", "Device responded - connection successful");
                             isConnected = true;
                         }
                         else
                         {
-                            tl.LogMessage("SerialCommunication.Connect", $"No valid response received. Got: '{response}'");
-                            isConnected = true; // Allow connection anyway for now
+                            // Even if no response, mark as connected - we'll find out on first real command
+                            tl.LogMessage("SerialCommunication.Connect", "No response to test command, assuming connected");
+                            isConnected = true;
                         }
                     }
                     catch (Exception comEx)
                     {
-                        tl.LogMessage("SerialCommunication.Connect", $"Communication test failed: {comEx.Message}");
-                        throw new InvalidOperationException($"Failed to communicate with device: {comEx.Message}", comEx);
+                        // Don't fail connection if test fails - mark as connected anyway
+                        tl.LogMessage("SerialCommunication.Connect", $"Quick test failed, assuming connected anyway: {comEx.Message}");
+                        isConnected = true;
                     }
                 }
                 catch (Exception ex)
@@ -384,6 +433,8 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 try
                 {
                     names[i - 1] = GetFilterName(i, filterCount);
+                    // Add delay between consecutive EEPROM reads to avoid overwhelming the device
+                    Thread.Sleep(100);
                 }
                 catch (Exception ex)
                 {
@@ -393,6 +444,205 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             }
 
             return names;
+        }
+
+        /// <summary>
+        /// Get complete device configuration using GETCONFIG command
+        /// </summary>
+        public DeviceConfig GetDeviceConfig()
+        {
+            lock (lockObject)
+            {
+                if (!IsConnected)
+                    throw new NotConnectedException("Serial port is not connected");
+
+                try
+                {
+                    DeviceConfig config = new DeviceConfig();
+
+                    tl.LogMessage("SerialCommunication.GetDeviceConfig", "Sending GETCONFIG command");
+
+                    // Use extended timeout for this command (5 seconds)
+                    string formattedCommand = SerialCommands.FormatCommand(SerialCommands.CMD_GET_CONFIG);
+
+                    // Temporarily set timeout
+                    int originalTimeout = serialPort.ReceiveTimeoutMs;
+                    try
+                    {
+                        serialPort.ReceiveTimeoutMs = 5000;
+
+                        // Clear buffers before sending
+                        serialPort.ClearBuffers();
+
+                        // Send command
+                        serialPort.Transmit(formattedCommand);
+
+                        // Read multi-line response until CONFIG_END
+                        List<string> lines = new List<string>();
+                        bool configComplete = false;
+                        int maxLines = 50; // Safety limit
+                        int lineCount = 0;
+
+                        while (!configComplete && lineCount < maxLines)
+                        {
+                            string line = ReadResponse();
+
+                            if (string.IsNullOrWhiteSpace(line))
+                                continue;
+
+                            tl.LogMessage("SerialCommunication.GetDeviceConfig", $"Received: {line}");
+
+                            if (line == "CONFIG_END")
+                            {
+                                configComplete = true;
+                                break;
+                            }
+
+                            lines.Add(line);
+                            lineCount++;
+                        }
+
+                        if (!configComplete)
+                        {
+                            throw new InvalidOperationException("GETCONFIG response did not end with CONFIG_END");
+                        }
+
+                        // Parse all lines
+                        foreach (string line in lines)
+                        {
+                            ParseConfigLine(line, config);
+                        }
+
+                        tl.LogMessage("SerialCommunication.GetDeviceConfig", $"Configuration received: {config.FilterCount} filters");
+
+                        return config;
+                    }
+                    finally
+                    {
+                        // Restore original timeout
+                        serialPort.ReceiveTimeoutMs = originalTimeout;
+                    }
+                }
+                catch (TimeoutException ex)
+                {
+                    tl.LogMessage("SerialCommunication.GetDeviceConfig", $"Timeout: {ex.Message}");
+                    throw new TimeoutException($"No response from device for GETCONFIG command", ex);
+                }
+                catch (Exception ex)
+                {
+                    tl.LogMessage("SerialCommunication.GetDeviceConfig", $"Error: {ex.Message}");
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Parse a single line from GETCONFIG response
+        /// </summary>
+        private void ParseConfigLine(string line, DeviceConfig config)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+                return;
+
+            int colonIndex = line.IndexOf(':');
+            if (colonIndex < 0)
+                return;
+
+            string key = line.Substring(0, colonIndex);
+            string value = line.Substring(colonIndex + 1);
+
+            try
+            {
+                switch (key)
+                {
+                    // Filter configuration
+                    case "FILTER_COUNT":
+                        config.FilterCount = int.Parse(value);
+                        break;
+
+                    case "FILTER_NAME":
+                        // Format: FILTER_NAME:1:Luminance
+                        int secondColon = value.IndexOf(':');
+                        if (secondColon > 0)
+                        {
+                            int position = int.Parse(value.Substring(0, secondColon));
+                            string name = value.Substring(secondColon + 1);
+                            if (position >= 1 && position <= SerialCommands.MAX_FILTER_COUNT)
+                            {
+                                config.FilterNames[position - 1] = name;
+                            }
+                        }
+                        break;
+
+                    // Motor configuration
+                    case "MOTOR_SPEED":
+                        config.MotorSpeed = int.Parse(value);
+                        break;
+                    case "MOTOR_MAX_SPEED":
+                        config.MotorMaxSpeed = int.Parse(value);
+                        break;
+                    case "MOTOR_ACCEL":
+                        config.MotorAccel = int.Parse(value);
+                        break;
+                    case "MOTOR_DISABLE_DELAY":
+                        config.MotorDisableDelay = int.Parse(value);
+                        break;
+                    case "MOTOR_STEPS_PER_REV":
+                        config.MotorStepsPerRev = int.Parse(value);
+                        break;
+                    case "MOTOR_INV":
+                        config.MotorInverted = value == "1";
+                        break;
+                    case "ENC_INV":
+                        config.EncoderInverted = value == "1";
+                        break;
+
+                    // Display configuration
+                    case "DISPLAY_SIZE":
+                        config.DisplaySize = value;
+                        break;
+                    case "DISPLAY_ROTATION":
+                        config.DisplayRotation180 = value == "1";
+                        break;
+                    case "DISPLAY_ENABLED":
+                        config.DisplayEnabled = value == "1";
+                        break;
+                    case "DISPLAY_BRIGHTNESS":
+                        config.DisplayBrightness = int.Parse(value);
+                        break;
+                    case "DISPLAY_MODE":
+                        config.DisplayMode = int.Parse(value);
+                        break;
+                    case "DISPLAY_POWER_MODE":
+                        config.DisplayPowerMode = int.Parse(value);
+                        break;
+                    case "DISPLAY_TIMEOUT":
+                        config.DisplayTimeout = int.Parse(value);
+                        break;
+
+                    // Status
+                    case "STATUS_POSITION":
+                        config.StatusPosition = int.Parse(value);
+                        break;
+                    case "STATUS_MOVING":
+                        config.StatusMoving = value == "1";
+                        break;
+                    case "STATUS_CALIBRATED":
+                        config.StatusCalibrated = value == "1";
+                        break;
+                    case "STATUS_ANGLE":
+                        config.StatusAngle = float.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+                        break;
+
+                    default:
+                        tl.LogMessage("SerialCommunication.ParseConfigLine", $"Unknown key: {key}");
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                tl.LogMessage("SerialCommunication.ParseConfigLine", $"Error parsing {key}={value}: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -440,6 +690,8 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                         name = $"Filter{i + 1}";
 
                     SetFilterName(i + 1, name);
+                    // Add delay between consecutive EEPROM writes to avoid overwhelming the device
+                    Thread.Sleep(100);
                 }
                 catch (Exception ex)
                 {
@@ -587,6 +839,90 @@ namespace ASCOM.autoFilterWheel.FilterWheel
             {
                 tl.LogMessage("SerialCommunication.Dispose", $"Error during dispose: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Auto-detect the COM port where the filter wheel is connected
+        /// </summary>
+        /// <param name="tl">TraceLogger for logging (optional)</param>
+        /// <returns>The port name if found, null otherwise</returns>
+        public static string AutoDetectPort(TraceLogger tl = null)
+        {
+            tl?.LogMessage("SerialCommunication.AutoDetectPort", "Starting auto-detection of filter wheel");
+
+            string[] availablePorts;
+            try
+            {
+                availablePorts = System.IO.Ports.SerialPort.GetPortNames();
+            }
+            catch (Exception ex)
+            {
+                tl?.LogMessage("SerialCommunication.AutoDetectPort", $"Error getting COM ports: {ex.Message}");
+                return null;
+            }
+
+            if (availablePorts.Length == 0)
+            {
+                tl?.LogMessage("SerialCommunication.AutoDetectPort", "No COM ports available");
+                return null;
+            }
+
+            tl?.LogMessage("SerialCommunication.AutoDetectPort", $"Found {availablePorts.Length} COM ports to test: {string.Join(", ", availablePorts)}");
+
+            foreach (string port in availablePorts)
+            {
+                tl?.LogMessage("SerialCommunication.AutoDetectPort", $"Testing port {port}");
+
+                // Create a temporary serial communication instance for testing
+                SerialCommunication testComm = null;
+                try
+                {
+                    testComm = new SerialCommunication(tl);
+
+                    // Try to connect with a short timeout
+                    testComm.Connect(port);
+
+                    if (!testComm.IsConnected)
+                    {
+                        tl?.LogMessage("SerialCommunication.AutoDetectPort", $"Port {port} - connection failed");
+                        continue;
+                    }
+
+                    // Send device ID command to verify it's our device
+                    string response = testComm.SendCommand(SerialCommands.CMD_DEVICE_ID, 2000);
+
+                    tl?.LogMessage("SerialCommunication.AutoDetectPort", $"Response from {port}: {response}");
+
+                    // Check if response matches expected device ID
+                    if (response.StartsWith(SerialCommands.RESP_DEVICE_ID) &&
+                        response.Contains(SerialCommands.EXPECTED_DEVICE_ID_PREFIX))
+                    {
+                        tl?.LogMessage("SerialCommunication.AutoDetectPort", $"Filter wheel found on {port}!");
+                        testComm.Disconnect();
+                        testComm.Dispose();
+                        return port;
+                    }
+                    else
+                    {
+                        tl?.LogMessage("SerialCommunication.AutoDetectPort", $"Port {port} - device ID mismatch");
+                    }
+
+                    // Not our device, disconnect and try next port
+                    testComm.Disconnect();
+                }
+                catch (Exception ex)
+                {
+                    tl?.LogMessage("SerialCommunication.AutoDetectPort", $"Port {port} test failed: {ex.Message}");
+                    try { testComm?.Disconnect(); } catch { }
+                }
+                finally
+                {
+                    try { testComm?.Dispose(); } catch { }
+                }
+            }
+
+            tl?.LogMessage("SerialCommunication.AutoDetectPort", "Filter wheel not found on any port");
+            return null;
         }
     }
 }

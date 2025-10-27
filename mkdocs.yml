@@ -1,0 +1,41 @@
+site_name: autoFilterWheel ASCOM Driver
+site_description: ASCOM driver for ESP32-C3 based filter wheel controller
+site_author: Juanjo López
+repo_url: https://github.com/juanjol/autoFilterWheel_ASCOM_drivers
+repo_name: juanjol/autoFilterWheel_ASCOM_drivers
+
+theme:
+  name: material
+  palette:
+    primary: indigo
+    accent: indigo
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Hardware Setup: hardware.md
+  - User Guide: usage.md
+  - Configuration: configuration.md
+  - Troubleshooting: troubleshooting.md
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - attr_list
+  - md_in_html

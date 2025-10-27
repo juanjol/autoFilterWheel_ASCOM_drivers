@@ -351,11 +351,73 @@ namespace ASCOM.autoFilterWheel.FilterWheel
 
                     lock (lockObject)
                     {
+                        bool connectionSuccessful = false;
+                        string originalPort = comPort;
+                        string attemptedPort = comPort;
+
+                        // First attempt: try configured port
                         try
                         {
-                            serialComm.Connect(comPort);
+                            serialComm.Connect(attemptedPort);
+                            connectionSuccessful = true;
+                            LogMessage("Connected Set", $"Successfully connected to filter wheel on {attemptedPort}");
+                        }
+                        catch (Exception ex)
+                        {
+                            LogMessage("Connected Set", $"Connection to {attemptedPort} failed: {ex.Message}");
+
+                            // Second attempt: try auto-detection if configured port failed
+                            LogMessage("Connected Set", "Attempting auto-detection of filter wheel port...");
+
+                            try
+                            {
+                                string detectedPort = SerialCommunication.AutoDetectPort(tl);
+
+                                if (detectedPort != null)
+                                {
+                                    LogMessage("Connected Set", $"Auto-detection found filter wheel on {detectedPort}");
+                                    attemptedPort = detectedPort;
+
+                                    // Try to connect to the detected port
+                                    try
+                                    {
+                                        serialComm.Connect(attemptedPort);
+                                        connectionSuccessful = true;
+                                        LogMessage("Connected Set", $"Successfully connected to filter wheel on auto-detected port {attemptedPort}");
+
+                                        // Update the stored port and save to profile
+                                        if (attemptedPort != originalPort)
+                                        {
+                                            comPort = attemptedPort;
+                                            LogMessage("Connected Set", $"Updating COM port from {originalPort} to {attemptedPort}");
+                                            WriteProfile(); // Save the new port to ASCOM profile
+                                            LogMessage("Connected Set", "Port configuration saved to profile");
+                                        }
+                                    }
+                                    catch (Exception connectEx)
+                                    {
+                                        LogMessage("Connected Set", $"Failed to connect to auto-detected port {attemptedPort}: {connectEx.Message}");
+                                    }
+                                }
+                                else
+                                {
+                                    LogMessage("Connected Set", "Auto-detection did not find the filter wheel on any available port");
+                                }
+                            }
+                            catch (Exception autoDetectEx)
+                            {
+                                LogMessage("Connected Set", $"Auto-detection error: {autoDetectEx.Message}");
+                            }
+                        }
+
+                        // Check if connection was successful
+                        if (connectionSuccessful)
+                        {
                             connectedState = true;
-                            LogMessage("Connected Set", "Successfully connected to filter wheel");
+
+                            // Invalidate cached filter names so they are re-read from EEPROM
+                            fwNames = null;
+                            LogMessage("Connected Set", "Filter names cache invalidated - will be read from device on next request");
 
                             // Get filter count from device
                             try
@@ -376,11 +438,11 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                                 LogMessage("Connected Set", $"Could not get filter count from device: {ex.Message}, using profile value: {filterCount}");
                             }
                         }
-                        catch (Exception ex)
+                        else
                         {
                             connectedState = false;
-                            LogMessage("Connected Set", $"Connection failed: {ex.Message}");
-                            throw new DriverException($"Failed to connect to filter wheel on {comPort}: {ex.Message}", ex);
+                            LogMessage("Connected Set", $"All connection attempts failed. Original port: {originalPort}");
+                            throw new DriverException($"Failed to connect to filter wheel. Tried port {originalPort} and auto-detection. Please verify the device is connected and powered on.", null);
                         }
                     }
                 }
@@ -563,16 +625,36 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                 {
                     try
                     {
-                        // Get filter names from Arduino if not already cached or if reconnected
+                        // Get filter names from device if not already cached or if reconnected
                         if (fwNames == null && IsConnected)
                         {
-                            fwNames = serialComm.GetAllFilterNames();
+                            LogMessage("Names Get", $"Reading filter names from device for {filterCount} filters");
+                            fwNames = serialComm.GetAllFilterNames(filterCount);
                         }
 
-                        // If still null or not connected, return default names
+                        // If still null or not connected, return default names based on current filter count
                         if (fwNames == null)
                         {
-                            fwNames = new string[] { "Filter 1", "Filter 2", "Filter 3", "Filter 4", "Filter 5" };
+                            fwNames = new string[filterCount];
+                            for (int i = 0; i < filterCount; i++)
+                            {
+                                fwNames[i] = $"Filter {i + 1}";
+                            }
+                        }
+
+                        // Ensure the array matches the current filter count
+                        if (fwNames.Length != filterCount)
+                        {
+                            LogMessage("Names Get", $"Filter names array size mismatch ({fwNames.Length} vs {filterCount}), adjusting");
+                            string[] adjustedNames = new string[filterCount];
+                            for (int i = 0; i < filterCount; i++)
+                            {
+                                if (i < fwNames.Length)
+                                    adjustedNames[i] = fwNames[i];
+                                else
+                                    adjustedNames[i] = $"Filter {i + 1}";
+                            }
+                            fwNames = adjustedNames;
                         }
 
                         foreach (string fwName in fwNames) // Write filter names to the log
@@ -585,8 +667,13 @@ namespace ASCOM.autoFilterWheel.FilterWheel
                     catch (Exception ex)
                     {
                         LogMessage("Names Get", $"Error getting filter names: {ex.Message}");
-                        // Return default names on error
-                        return new string[] { "Filter 1", "Filter 2", "Filter 3", "Filter 4", "Filter 5" };
+                        // Return default names based on filter count
+                        string[] defaultNames = new string[filterCount];
+                        for (int i = 0; i < filterCount; i++)
+                        {
+                            defaultNames[i] = $"Filter {i + 1}";
+                        }
+                        return defaultNames;
                     }
                 }
             }
