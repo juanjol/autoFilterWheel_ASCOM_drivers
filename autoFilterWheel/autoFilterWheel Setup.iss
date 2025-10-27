@@ -34,9 +34,9 @@ Name: "{cf}\ASCOM\Uninstall\FilterWheel\autoFilterWheel"
 ; TODO: Add subfolders below {app} as needed (e.g. Name: "{app}\MyFolder")
 
 [Files]
-Source: "bin\Release\ASCOM.autoFilterWheel.exe"; DestDir: "{app}"; Flags: ignoreversion replacesameversion restartreplace uninsrestartdelete; AfterInstall: RegASCOM()
-Source: "bin\Release\ASCOM.autoFilterWheel.exe.config"; DestDir: "{app}"; Flags: ignoreversion replacesameversion
-Source: "bin\Release\ASCOM.*.dll"; DestDir: "{app}"; Flags: ignoreversion replacesameversion
+Source: "bin\Release\ASCOM.autoFilterWheel.exe"; DestDir: "{app}"; Flags: replacesameversion restartreplace uninsrestartdelete; AfterInstall: RegASCOM()
+Source: "bin\Release\ASCOM.autoFilterWheel.exe.config"; DestDir: "{app}"; Flags: replacesameversion
+Source: "bin\Release\ASCOM.*.dll"; DestDir: "{app}"; Flags: replacesameversion
 Source: "bin\Release\ASCOM.*.xml"; DestDir: "{app}"; Flags: skipifsourcedoesntexist ignoreversion
 ; Require a read-me HTML to appear after installation, maybe driver's Help doc
 Source: "ReadMe.htm"; DestDir: "{app}"; Flags: isreadme ignoreversion
